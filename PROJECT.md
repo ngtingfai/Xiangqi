@@ -11,7 +11,7 @@ A browser-based Xiangqi (Chinese Chess) game built with vanilla HTML/CSS/JavaScr
 |------|---------|
 | `index.html` | Main HTML page with sidebar UI, canvas, game-over modal |
 | `style.css` | Dark-themed UI styling (330 lines) |
-| `game.js` | All game logic, AI, rendering (~998 lines) |
+| `game.js` | All game logic, AI, rendering (~971 lines) |
 
 ## Architecture (game.js)
 
@@ -44,11 +44,10 @@ A browser-based Xiangqi (Chinese Chess) game built with vanilla HTML/CSS/JavaScr
 | `makeMove()` | 458 | Executes a move, switches turn |
 | `undoMove()` | 479 | Reverses last move |
 | `evaluateBoard()` | 497 | Material evaluation for AI (soldiers worth more after crossing river) |
-| `getAllMoves(color)` | 524 | **Unused now** — like `getAllLegalMoves` but only checks kings-facing, not check |
-| `minimax()` | 552 | Alpha-beta pruning AI search (uses `getAllLegalMoves`) |
-| `aiMove()` | 605 | AI entry point — evaluates all legal moves, picks best via minimax |
-| `drawBoard()` | 652 | Renders board, pieces, selection highlight, valid move indicators |
-| `drawPiece()` | 754 | Renders a single piece with circle, border, Chinese character |
+| `minimax()` | 525 | Alpha-beta pruning AI search (uses `getAllLegalMoves`) |
+| `aiMove()` | 578 | AI entry point — evaluates all legal moves, picks best via minimax |
+| `drawBoard()` | 625 | Renders board, pieces, selection highlight, valid move indicators |
+| `drawPiece()` | 727 | Renders a single piece with circle, border, Chinese character |
 
 ### Move Validation per Piece Type (lines 219-393)
 - **King**: 1 step orthogonally, must stay in palace (rows 0-2 cols 3-5 for black, rows 7-9 cols 3-5 for red)
@@ -91,7 +90,6 @@ A browser-based Xiangqi (Chinese Chess) game built with vanilla HTML/CSS/JavaScr
 - Valid move indicators (yellow circles)
 
 ## Known Issues / TODO Ideas
-- `getAllMoves()` function (line 524) is no longer used — could be removed
 - AI evaluation is material-only, no positional awareness
 - No draw rule (repetition/50-move) — games could theoretically go forever
 - No check/checkmate sound effects or animations

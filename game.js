@@ -184,6 +184,20 @@ function getPieceSymbol(piece) {
     return piece.color === 'red' ? RED_PIECES[piece.type.toUpperCase()] : BLACK_PIECES[piece.type.toUpperCase()];
 }
 
+function boardToScreen(row, col) {
+    if (game.isFlipped) {
+        return [BOARD_HEIGHT - 1 - row, BOARD_SIZE - 1 - col];
+    }
+    return [row, col];
+}
+
+function screenToBoard(row, col) {
+    if (game.isFlipped) {
+        return [BOARD_HEIGHT - 1 - row, BOARD_SIZE - 1 - col];
+    }
+    return [row, col];
+}
+
 function isValidPos(row, col) {
     return row >= 0 && row < BOARD_HEIGHT && col >= 0 && col < BOARD_SIZE;
 }
@@ -521,34 +535,6 @@ function evaluateBoard() {
     return score;
 }
 
-function getAllMoves(color) {
-    const moves = [];
-    
-    for (let r = 0; r < BOARD_HEIGHT; r++) {
-        for (let c = 0; c < BOARD_SIZE; c++) {
-            if (game.board[r][c] && game.board[r][c].color === color) {
-                const pieceMoves = getValidMoves(r, c);
-                pieceMoves.forEach(([tr, tc]) => {
-                    const piece = game.board[r][c];
-                    const captured = game.board[tr][tc];
-                    
-                    game.board[tr][tc] = piece;
-                    game.board[r][c] = null;
-                    
-                    if (!isKingsFacing()) {
-                        moves.push([r, c, tr, tc]);
-                    }
-                    
-                    game.board[r][c] = piece;
-                    game.board[tr][tc] = captured;
-                });
-            }
-        }
-    }
-    
-    return moves;
-}
-
 function minimax(depth, alpha, beta, isMaximizing) {
     if (depth === 0) {
         return evaluateBoard();
@@ -729,8 +715,9 @@ function drawBoard() {
     
     if (game.selectedPiece) {
         const [sr, sc] = game.selectedPiece;
-        const x = MARGIN + sc * CELL_SIZE;
-        const y = MARGIN + sr * CELL_SIZE;
+        const [ssr, ssc] = boardToScreen(sr, sc);
+        const x = MARGIN + ssc * CELL_SIZE;
+        const y = MARGIN + ssr * CELL_SIZE;
         
         ctx.strokeStyle = '#f1c40f';
         ctx.lineWidth = 3;
@@ -740,8 +727,9 @@ function drawBoard() {
         
         const moves = getValidMoves(sr, sc);
         moves.forEach(([mr, mc]) => {
-            const mx = MARGIN + mc * CELL_SIZE;
-            const my = MARGIN + mr * CELL_SIZE;
+            const [smr, smc] = boardToScreen(mr, mc);
+            const mx = MARGIN + smc * CELL_SIZE;
+            const my = MARGIN + smr * CELL_SIZE;
             
             ctx.fillStyle = 'rgba(241, 196, 15, 0.3)';
             ctx.beginPath();
@@ -752,8 +740,9 @@ function drawBoard() {
 }
 
 function drawPiece(row, col, piece) {
-    const x = MARGIN + col * CELL_SIZE;
-    const y = MARGIN + row * CELL_SIZE;
+    const [sr, sc] = boardToScreen(row, col);
+    const x = MARGIN + sc * CELL_SIZE;
+    const y = MARGIN + sr * CELL_SIZE;
     const radius = 26;
     
     ctx.beginPath();
@@ -786,7 +775,7 @@ function getBoardCoords(e) {
     const row = Math.round((y - MARGIN) / CELL_SIZE);
     
     if (isValidPos(row, col)) {
-        return [row, col];
+        return screenToBoard(row, col);
     }
     return null;
 }
