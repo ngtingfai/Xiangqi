@@ -555,7 +555,7 @@ function minimax(depth, alpha, beta, isMaximizing) {
     }
     
     const color = isMaximizing ? 'red' : 'black';
-    const moves = getAllMoves(color);
+    const moves = getAllLegalMoves(color);
     
     if (moves.length === 0) {
         return isMaximizing ? -100000 : 100000;
@@ -900,11 +900,11 @@ document.getElementById('vs-human-btn').addEventListener('click', () => {
 const ENDGAME_STUDIES = [
     {
         name: "Basic Checkmate",
-        description: "Red to move. Use the Chariot to deliver checkmate. The King cannot escape.",
+        description: "Red to move. Play the Chariot to the same column as the Black King to deliver checkmate. The Red King controls the escape squares via the 'flying general' rule.",
         setup: (board) => {
-            board[0][4] = { type: 'king', color: 'black' };
-            board[9][3] = { type: 'king', color: 'red' };
-            board[2][0] = { type: 'chariot', color: 'red' };
+            board[0][3] = { type: 'king', color: 'black' };
+            board[9][4] = { type: 'king', color: 'red' };
+            board[5][0] = { type: 'chariot', color: 'red' };
             return board;
         }
     },
