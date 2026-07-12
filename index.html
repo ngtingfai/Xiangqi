@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chinese Chess - Xiangqi</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <div id="sidebar">
+            <h1>中國象棋</h1>
+            <h2>Chinese Chess</h2>
+            
+            <div id="game-status">
+                <div id="turn-indicator">
+                    <span id="turn-text">Red's Turn</span>
+                    <span id="turn-piece" class="piece-indicator red">帥</span>
+                </div>
+                <div id="move-history"></div>
+            </div>
+            
+            <div id="controls">
+                <button id="new-game-btn">New Game</button>
+                <button id="undo-btn">Undo Move</button>
+                <button id="flip-board-btn">Flip Board</button>
+            </div>
+            
+            <div id="difficulty">
+                <label>AI Difficulty:</label>
+                <select id="ai-depth">
+                    <option value="1">Easy (Depth 1)</option>
+                    <option value="2" selected>Medium (Depth 2)</option>
+                    <option value="3">Hard (Depth 3)</option>
+                </select>
+            </div>
+            
+            <div id="mode-toggle">
+                <button id="vs-ai-btn" class="active">vs Computer</button>
+                <button id="vs-human-btn">vs Human</button>
+            </div>
+            
+            <div id="endgame-studies">
+                <h3>Endgame Studies</h3>
+                <div id="study-list">
+                    <button class="study-btn" data-study="0">1. Basic Checkmate</button>
+                    <button class="study-btn" data-study="1">2. Chariot & Horse</button>
+                    <button class="study-btn" data-study="2">3. Cannon Mate</button>
+                    <button class="study-btn" data-study="3">4. Double Cannon</button>
+                    <button class="study-btn" data-study="4">5. Horse & Cannon</button>
+                    <button class="study-btn" data-study="5">6. Chariot Mate</button>
+                </div>
+                <p id="study-description"></p>
+            </div>
+        </div>
+        
+        <div id="board-container">
+            <canvas id="board"></canvas>
+            <div id="captured-pieces">
+                <div id="red-captured">
+                    <h4>Red Captured</h4>
+                    <div id="red-captured-list"></div>
+                </div>
+                <div id="black-captured">
+                    <h4>Black Captured</h4>
+                    <div id="black-captured-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="game-over-overlay" class="hidden">
+        <div id="game-over-modal">
+            <h2 id="game-over-title">Checkmate!</h2>
+            <p id="game-over-message">Red Wins!</p>
+            <button id="game-over-btn">Play Again</button>
+        </div>
+    </div>
+    
+    <script src="game.js"></script>
+</body>
+</html>
