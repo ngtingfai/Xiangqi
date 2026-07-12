@@ -165,6 +165,33 @@ body {
     border-color: #e74c3c;
 }
 
+.hidden {
+    display: none !important;
+}
+
+#side-toggle {
+    margin-bottom: 15px;
+}
+
+#side-toggle button {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    border: 2px solid #8e44ad;
+    background: transparent;
+    color: #fff;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#side-toggle button:hover {
+    background: #8e44ad;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
 #endgame-studies {
     background: rgba(0,0,0,0.3);
     border-radius: 10px;

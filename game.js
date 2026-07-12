@@ -57,6 +57,7 @@ const game = {
     capturedPieces: { red: [], black: [] },
     isFlipped: false,
     vsAI: true,
+    humanColor: 'red',
     aiDepth: 2,
     aiThinking: false,
     gameOver: false
@@ -591,19 +592,23 @@ function minimax(depth, alpha, beta, isMaximizing) {
 function aiMove() {
     if (game.aiThinking || game.gameOver) return;
     
+    const aiColor = game.humanColor === 'red' ? 'black' : 'red';
+    const aiIsMaximizing = aiColor === 'red';
+    
     game.aiThinking = true;
     
     setTimeout(() => {
-        const moves = getAllLegalMoves('black');
+        const moves = getAllLegalMoves(aiColor);
         if (moves.length === 0) {
             game.gameOver = true;
-            showGameOver('Victory!', 'Red Wins - No moves left!');
+            const winner = aiColor === 'red' ? 'Black' : 'Red';
+            showGameOver('Victory!', winner + ' Wins - No moves left!');
             game.aiThinking = false;
             return;
         }
         
         let bestMove = null;
-        let bestScore = Infinity;
+        let bestScore = aiIsMaximizing ? -Infinity : Infinity;
         
         for (const [fr, fc, tr, tc] of moves) {
             const piece = game.board[fr][fc];
@@ -612,12 +617,12 @@ function aiMove() {
             game.board[tr][tc] = piece;
             game.board[fr][fc] = null;
             
-            const score = minimax(game.aiDepth - 1, -Infinity, Infinity, true);
+            const score = minimax(game.aiDepth - 1, -Infinity, Infinity, !aiIsMaximizing);
             
             game.board[fr][fc] = piece;
             game.board[tr][tc] = captured;
             
-            if (score < bestScore) {
+            if (aiIsMaximizing ? score > bestScore : score < bestScore) {
                 bestScore = score;
                 bestMove = [fr, fc, tr, tc];
             }
@@ -782,7 +787,7 @@ function getBoardCoords(e) {
 
 canvas.addEventListener('click', (e) => {
     if (game.gameOver || game.aiThinking) return;
-    if (game.vsAI && game.currentTurn === 'black') return;
+    if (game.vsAI && game.currentTurn !== game.humanColor) return;
     
     const coords = getBoardCoords(e);
     if (!coords) return;
@@ -802,7 +807,7 @@ canvas.addEventListener('click', (e) => {
             updateUI();
             checkForCheckmate();
             
-            if (game.vsAI && !game.gameOver && game.currentTurn === 'black') {
+            if (game.vsAI && !game.gameOver && game.currentTurn !== game.humanColor) {
                 aiMove();
             }
             return;
@@ -846,6 +851,9 @@ document.getElementById('new-game-btn').addEventListener('click', () => {
     initBoard();
     drawBoard();
     updateUI();
+    if (game.vsAI && game.humanColor === 'black') {
+        aiMove();
+    }
 });
 
 document.getElementById('undo-btn').addEventListener('click', () => {
@@ -870,8 +878,11 @@ document.getElementById('ai-depth').addEventListener('change', (e) => {
 
 document.getElementById('vs-ai-btn').addEventListener('click', () => {
     game.vsAI = true;
+    game.humanColor = 'red';
     document.getElementById('vs-ai-btn').classList.add('active');
     document.getElementById('vs-human-btn').classList.remove('active');
+    document.getElementById('side-toggle').classList.remove('hidden');
+    document.getElementById('switch-sides-btn').textContent = 'Switch Sides (Play as Black)';
     initBoard();
     drawBoard();
     updateUI();
@@ -881,9 +892,23 @@ document.getElementById('vs-human-btn').addEventListener('click', () => {
     game.vsAI = false;
     document.getElementById('vs-human-btn').classList.add('active');
     document.getElementById('vs-ai-btn').classList.remove('active');
+    document.getElementById('side-toggle').classList.add('hidden');
     initBoard();
     drawBoard();
     updateUI();
+});
+
+document.getElementById('switch-sides-btn').addEventListener('click', () => {
+    game.humanColor = game.humanColor === 'red' ? 'black' : 'red';
+    game.isFlipped = game.humanColor === 'black';
+    const btn = document.getElementById('switch-sides-btn');
+    btn.textContent = game.humanColor === 'red' ? 'Switch Sides (Play as Black)' : 'Switch Sides (Play as Red)';
+    initBoard();
+    drawBoard();
+    updateUI();
+    if (game.humanColor === 'black') {
+        aiMove();
+    }
 });
 
 const ENDGAME_STUDIES = [
@@ -963,11 +988,13 @@ document.querySelectorAll('.study-btn').forEach(btn => {
         study.setup(game.board);
         
         game.currentTurn = 'red';
+        game.humanColor = 'red';
         game.selectedPiece = null;
         game.moveHistory = [];
         game.capturedPieces = { red: [], black: [] };
         game.gameOver = false;
         document.getElementById('game-over-overlay').classList.add('hidden');
+        document.getElementById('switch-sides-btn').textContent = 'Switch Sides (Play as Black)';
         
         document.getElementById('study-description').textContent = study.description;
         
@@ -980,6 +1007,9 @@ document.getElementById('game-over-btn').addEventListener('click', () => {
     initBoard();
     drawBoard();
     updateUI();
+    if (game.vsAI && game.humanColor === 'black') {
+        aiMove();
+    }
 });
 
 initBoard();
