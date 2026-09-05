@@ -70,7 +70,7 @@ function loadGame() {
         'isKingsFacing', 'isInPalace', 'isAcrossRiver', 'boardToScreen',
         'screenToBoard', 'makeMove', 'undoMove', 'evaluateBoard',
         'getPieceSymbol', 'toWXFMove', 'toChineseMove', 'formatMove',
-        'updateUI', 'checkForCheckmate'
+        'updateUI', 'checkForCheckmate', 'restorePosition'
     ];
     const epilogue = `\n;globalThis.__api = { ${apiNames.join(', ')} };`;
 
@@ -94,6 +94,8 @@ function setBoard(api, pieces) {
     api.game.isFlipped = false;
     api.game.notation = 'chinese';
     api.game.aiThinking = false;
+    api.game.historyIndex = -1;
+    api.game.initialBoard = api.game.board.map(row => row.slice());
 }
 
 function hasMove(moves, fr, fc, tr, tc) {

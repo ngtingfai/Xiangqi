@@ -51,6 +51,8 @@ const PIECE_VALUES = {
 
 const game = {
     board: [],
+    initialBoard: [],
+    historyIndex: -1,
     currentTurn: 'red',
     selectedPiece: null,
     moveHistory: [],
@@ -63,6 +65,8 @@ const game = {
     gameOver: false,
     notation: 'chinese'
 };
+
+let aiMoveSequence = 0;
 
 function initBoard() {
     game.board = Array(BOARD_HEIGHT).fill(null).map(() => Array(BOARD_SIZE).fill(null));
@@ -118,6 +122,10 @@ function initBoard() {
     game.moveHistory = [];
     game.capturedPieces = { red: [], black: [] };
     game.gameOver = false;
+    game.aiThinking = false;
+    game.historyIndex = -1;
+    game.initialBoard = game.board.map(row => row.slice());
+    aiMoveSequence++;
     document.getElementById('game-over-overlay').classList.add('hidden');
 }
 
@@ -472,6 +480,11 @@ function isInCheck(color) {
 }
 
 function makeMove(fromRow, fromCol, toRow, toCol) {
+    if (game.historyIndex < game.moveHistory.length - 1) {
+        game.moveHistory = game.moveHistory.slice(0, game.historyIndex + 1);
+        restorePosition(game.historyIndex);
+    }
+
     const piece = game.board[fromRow][fromCol];
     const captured = game.board[toRow][toCol];
     
@@ -488,6 +501,7 @@ function makeMove(fromRow, fromCol, toRow, toCol) {
         piece: piece,
         captured: captured
     });
+    game.historyIndex = game.moveHistory.length - 1;
     
     game.currentTurn = game.currentTurn === 'red' ? 'black' : 'red';
 }
@@ -508,6 +522,7 @@ function undoMove() {
     
     game.currentTurn = game.currentTurn === 'red' ? 'black' : 'red';
     game.selectedPiece = null;
+    game.historyIndex = game.moveHistory.length - 1;
 }
 
 const CHINESE_NUMERALS = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
@@ -571,6 +586,35 @@ function formatMove(move) {
         return `${getPieceSymbol(move.piece)} ${toWXFMove(fr, fc, tr, tc)}`;
     }
     return toChineseMove(fr, fc, tr, tc, move.piece);
+}
+
+function restorePosition(index) {
+    if (index < -1) index = -1;
+    if (index >= game.moveHistory.length) index = game.moveHistory.length - 1;
+
+    const board = game.initialBoard.map(row => row.slice());
+    game.capturedPieces = { red: [], black: [] };
+
+    for (let i = 0; i <= index; i++) {
+        const move = game.moveHistory[i];
+        if (move.captured) {
+            game.capturedPieces[move.captured.color].push(move.captured);
+        }
+        board[move.to[0]][move.to[1]] = move.piece;
+        board[move.from[0]][move.from[1]] = null;
+    }
+
+    game.board = board;
+    game.currentTurn = (index + 1) % 2 === 0 ? 'red' : 'black';
+    game.historyIndex = index;
+    game.selectedPiece = null;
+    game.gameOver = false;
+    game.aiThinking = false;
+    aiMoveSequence++;
+    document.getElementById('game-over-overlay').classList.add('hidden');
+
+    drawBoard();
+    updateUI();
 }
 
 function evaluateBoard() {
@@ -661,7 +705,9 @@ function aiMove() {
     
     game.aiThinking = true;
     
+    const token = ++aiMoveSequence;
     setTimeout(() => {
+        if (token !== aiMoveSequence) return;
         const moves = getAllLegalMoves(aiColor);
         if (moves.length === 0) {
             game.gameOver = true;
@@ -893,11 +939,25 @@ function updateUI() {
     document.getElementById('turn-piece').textContent = game.currentTurn === 'red' ? '帥' : '將';
     document.getElementById('turn-piece').className = 'piece-indicator ' + game.currentTurn;
     
-    const historyDiv = document.getElementById('move-history');
-    historyDiv.innerHTML = game.moveHistory.map((move, i) => {
-        return `<div class="move-entry">${i + 1}. ${formatMove(move)}</div>`;
-    }).join('');
-    historyDiv.scrollTop = historyDiv.scrollHeight;
+    const tableBody = document.getElementById('notation-body');
+    let tableHtml = '';
+    for (let i = 0; i < game.moveHistory.length; i++) {
+        if (i % 2 === 0) {
+            tableHtml += `<tr><td>${Math.floor(i / 2) + 1}</td>`;
+        }
+        const move = game.moveHistory[i];
+        const currentClass = i === game.historyIndex ? ' current' : '';
+        const link = `<a href="#" class="move-link${currentClass}" data-move="${i}">${formatMove(move)}</a>`;
+        tableHtml += `<td class="${i % 2 === 0 ? 'red-move' : 'black-move'}">${link}</td>`;
+        if (i % 2 === 1) {
+            tableHtml += `</tr>`;
+        }
+    }
+    if (game.moveHistory.length % 2 === 1) {
+        tableHtml += `<td></td></tr>`;
+    }
+    tableBody.innerHTML = tableHtml;
+    tableBody.scrollTop = tableBody.scrollHeight;
     
     document.getElementById('red-captured-list').innerHTML = game.capturedPieces.red.map(p => 
         `<span class="captured-piece red">${getPieceSymbol(p)}</span>`
@@ -926,6 +986,13 @@ document.getElementById('undo-btn').addEventListener('click', () => {
     }
     drawBoard();
     updateUI();
+});
+
+document.getElementById('notation-table').addEventListener('click', (e) => {
+    const link = e.target.closest ? e.target.closest('.move-link') : null;
+    if (!link) return;
+    e.preventDefault();
+    restorePosition(parseInt(link.dataset.move, 10));
 });
 
 document.getElementById('flip-board-btn').addEventListener('click', () => {
@@ -1060,6 +1127,10 @@ document.querySelectorAll('.study-btn').forEach(btn => {
         game.moveHistory = [];
         game.capturedPieces = { red: [], black: [] };
         game.gameOver = false;
+        game.aiThinking = false;
+        game.historyIndex = -1;
+        game.initialBoard = game.board.map(row => row.slice());
+        aiMoveSequence++;
         document.getElementById('game-over-overlay').classList.add('hidden');
         document.getElementById('switch-sides-btn').textContent = 'Switch Sides (Play as Black)';
         

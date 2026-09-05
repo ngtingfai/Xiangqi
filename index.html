@@ -17,10 +17,6 @@
                     <span id="turn-text">Red's Turn</span>
                     <span id="turn-piece" class="piece-indicator red">帥</span>
                 </div>
-                <div id="notation-toggle">
-                    <button id="notation-btn">Notation: 中文</button>
-                </div>
-                <div id="move-history"></div>
             </div>
             
             <div id="controls">
@@ -72,6 +68,25 @@
                     <h4>Black Captured</h4>
                     <div id="black-captured-list"></div>
                 </div>
+            </div>
+        </div>
+        
+        <div id="notation-panel">
+            <h3>Moves</h3>
+            <div id="notation-toggle">
+                <button id="notation-btn">Notation: 中文</button>
+            </div>
+            <div id="notation-table-wrap">
+                <table id="notation-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th class="red-col">Red</th>
+                            <th class="black-col">Black</th>
+                        </tr>
+                    </thead>
+                    <tbody id="notation-body"></tbody>
+                </table>
             </div>
         </div>
     </div>
