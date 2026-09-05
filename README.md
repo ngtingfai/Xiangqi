@@ -1,9 +1,13 @@
 # Xiangqi (Chinese Chess) Project
 
+## Quick Start
+Open `index.html` in a browser (double-click, or `Start-Process index.html` on Windows). No build step, no dependencies.
+
+**Repo:** https://github.com/ngtingfai/Xiangqi — `main` branch, `gh` CLI authed as `ngtingfai`. Only commit/push when explicitly asked.
+
 ## Overview
 A browser-based Xiangqi (Chinese Chess) game built with vanilla HTML/CSS/JavaScript (no frameworks). Rendered on an HTML5 Canvas. Supports vs AI (minimax with alpha-beta pruning) and vs Human modes, with configurable AI difficulty, board flip, undo, endgame studies, and switchable sides.
 
-**GitHub:** https://github.com/ngtingfai/Xiangqi  
 **Local path:** `C:\Users\user\Desktop\TF\VScode\Xiangqi`
 
 ## Files
@@ -12,7 +16,7 @@ A browser-based Xiangqi (Chinese Chess) game built with vanilla HTML/CSS/JavaScr
 | `index.html` | 86 | Main HTML page with sidebar UI, canvas, game-over modal |
 | `style.css` | 357 | Dark-themed UI styling with gradient background |
 | `game.js` | 1017 | All game logic, AI, rendering |
-| `PROJECT.md` | — | This file — project documentation |
+| `README.md` | — | This file — project documentation |
 
 ## Architecture (game.js)
 
@@ -129,14 +133,10 @@ A browser-based Xiangqi (Chinese Chess) game built with vanilla HTML/CSS/JavaScr
 - **Click-to-select, click-to-move** with valid move indicators (yellow circles)
 - **Endgame study** buttons — load preset puzzle positions
 
-## GitHub Repo
-- Repo: https://github.com/ngtingfai/Xiangqi
-- Branch: `main`
-- Authenticated via `gh` CLI as user `ngtingfai`
-
 ## Session History
 - **Session 1**: Initial project creation, pushed to GitHub. Fixed Example 1 endgame study (was unsolvable — no one-move checkmate existed). Fixed AI minimax to use `getAllLegalMoves` instead of `getAllMoves`.
 - **Session 2**: Removed unused `getAllMoves` function. Fixed flip board button (was toggling state but `drawBoard`/`drawPiece`/`getBoardCoords` never used it — added `boardToScreen`/`screenToBoard` helpers). Added Switch Sides feature (`game.humanColor`, color-aware `aiMove`, auto-flip, AI first move trigger).
+- **Session 3**: Added `README.md`; merged `PROJECT.md` documentation into this file.
 
 ## Known Issues / TODO Ideas
 - AI evaluation is material-only, no positional awareness or piece-square tables
