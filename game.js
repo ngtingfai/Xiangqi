@@ -60,7 +60,8 @@ const game = {
     humanColor: 'red',
     aiDepth: 2,
     aiThinking: false,
-    gameOver: false
+    gameOver: false,
+    notation: 'chinese'
 };
 
 function initBoard() {
@@ -509,6 +510,69 @@ function undoMove() {
     game.selectedPiece = null;
 }
 
+const CHINESE_NUMERALS = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+
+function toWXFMove(fr, fc, tr, tc) {
+    return `${fc}${fr}${tc}${tr}`;
+}
+
+function getChineseFile(fc, color) {
+    return color === 'red' ? BOARD_SIZE - fc : fc + 1;
+}
+
+function getChineseMovePrefix(fr, fc, tr, tc, color, type) {
+    const same = [];
+    for (let r = 0; r < BOARD_HEIGHT; r++) {
+        if (r === fr) continue;
+        if (tc === fc && r === tr) continue;
+        const piece = game.board[r][fc];
+        if (piece && piece.color === color && piece.type === type) {
+            same.push(r);
+        }
+    }
+    if (same.length === 0) return '';
+    const rows = same.concat(fr);
+    rows.sort((a, b) => color === 'red' ? a - b : b - a);
+    const idx = rows.indexOf(fr);
+    if (idx === 0) return '前';
+    if (idx === rows.length - 1) return '後';
+    return '中';
+}
+
+function toChineseMove(fr, fc, tr, tc, piece) {
+    const { type, color } = piece;
+    const symbol = getPieceSymbol(piece);
+    const fromFile = getChineseFile(fc, color);
+    const destFile = getChineseFile(tc, color);
+    const forward = color === 'red' ? tr < fr : tr > fr;
+
+    let action, number;
+    if (fr === tr) {
+        action = '平';
+        number = destFile;
+    } else {
+        action = forward ? '進' : '退';
+        const oblique = ['horse', 'elephant', 'advisor'].includes(type);
+        number = oblique ? destFile : Math.abs(tr - fr);
+    }
+
+    const prefix = getChineseMovePrefix(fr, fc, tr, tc, color, type);
+    const numeral = (n) => CHINESE_NUMERALS[n];
+    if (prefix) {
+        return `${prefix}${symbol}${action}${numeral(number)}`;
+    }
+    return `${symbol}${numeral(fromFile)}${action}${numeral(number)}`;
+}
+
+function formatMove(move) {
+    const [fr, fc] = move.from;
+    const [tr, tc] = move.to;
+    if (game.notation === 'wxf') {
+        return `${getPieceSymbol(move.piece)} ${toWXFMove(fr, fc, tr, tc)}`;
+    }
+    return toChineseMove(fr, fc, tr, tc, move.piece);
+}
+
 function evaluateBoard() {
     let score = 0;
     
@@ -831,10 +895,7 @@ function updateUI() {
     
     const historyDiv = document.getElementById('move-history');
     historyDiv.innerHTML = game.moveHistory.map((move, i) => {
-        const pieceSymbol = getPieceSymbol(move.piece);
-        const from = `(${move.from[1]},${move.from[0]})`;
-        const to = `(${move.to[1]},${move.to[0]})`;
-        return `<div class="move-entry">${i + 1}. ${pieceSymbol} ${from} → ${to}</div>`;
+        return `<div class="move-entry">${i + 1}. ${formatMove(move)}</div>`;
     }).join('');
     historyDiv.scrollTop = historyDiv.scrollHeight;
     
@@ -870,6 +931,12 @@ document.getElementById('undo-btn').addEventListener('click', () => {
 document.getElementById('flip-board-btn').addEventListener('click', () => {
     game.isFlipped = !game.isFlipped;
     drawBoard();
+});
+
+document.getElementById('notation-btn').addEventListener('click', () => {
+    game.notation = game.notation === 'chinese' ? 'wxf' : 'chinese';
+    document.getElementById('notation-btn').textContent = game.notation === 'chinese' ? 'Notation: 中文' : 'Notation: WXF';
+    updateUI();
 });
 
 document.getElementById('ai-depth').addEventListener('change', (e) => {

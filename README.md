@@ -3,20 +3,30 @@
 ## Quick Start
 Open `index.html` in a browser (double-click, or `Start-Process index.html` on Windows). No build step, no dependencies.
 
+**Tests:** `node --test` (uses Node's built-in test runner; no dependencies).
+
 **Repo:** https://github.com/ngtingfai/Xiangqi — `main` branch, `gh` CLI authed as `ngtingfai`. Only commit/push when explicitly asked.
 
 ## Overview
-A browser-based Xiangqi (Chinese Chess) game built with vanilla HTML/CSS/JavaScript (no frameworks). Rendered on an HTML5 Canvas. Supports vs AI (minimax with alpha-beta pruning) and vs Human modes, with configurable AI difficulty, board flip, undo, endgame studies, and switchable sides.
+A browser-based Xiangqi (Chinese Chess) game built with vanilla HTML/CSS/JavaScript (no frameworks). Rendered on an HTML5 Canvas. Supports vs AI (minimax with alpha-beta pruning) and vs Human modes, with configurable AI difficulty, board flip, undo, endgame studies, switchable sides, and move history in WXF or traditional Chinese notation (toggleable).
 
 **Local path:** `C:\Users\user\Desktop\TF\VScode\Xiangqi`
 
 ## Files
 | File | Lines | Purpose |
 |------|-------|---------|
-| `index.html` | 86 | Main HTML page with sidebar UI, canvas, game-over modal |
-| `style.css` | 357 | Dark-themed UI styling with gradient background |
-| `game.js` | 1017 | All game logic, AI, rendering |
+| `index.html` | 89 | Main HTML page with sidebar UI, canvas, game-over modal |
+| `style.css` | 377 | Dark-themed UI styling with gradient background |
+| `game.js` | 1084 | All game logic, AI, rendering |
+| `test/harness.js` | 117 | Loads `game.js` in a sandboxed VM with DOM stubs |
+| `test/game.test.js` | 370 | Regression tests (rules, AI eval, checkmate/stalemate, notation) |
 | `README.md` | — | This file — project documentation |
+
+## Tests
+- Run with `node --test` from the repo root. Built-in `node:test` runner, zero dependencies.
+- `test/harness.js` evaluates `game.js` inside a `vm` context with stubbed `document`/canvas/`ctx`, then exposes the module's functions via a `globalThis.__api` epilogue. An element stub records event listeners so button handlers can be exercised via `.click()`.
+- Tests cover: standard setup, 44 legal opening moves each, palace/river helpers, board-flip transforms, per-piece move rules, kings-facing filter, check detection, pinned-piece rules, capture/undo, checkmate + stalemate (loss), evaluation values, and WXF/Chinese notation incl. 前/後 disambiguation.
+- Note: values returned by game.js come from a different JS realm (vm), so tests use `assert.deepEqual` (not `deepStrictEqual`) for objects/arrays.
 
 ## Architecture (game.js)
 
@@ -39,6 +49,7 @@ A browser-based Xiangqi (Chinese Chess) game built with vanilla HTML/CSS/JavaScr
 - `aiDepth` — 1/2/3, default `2`
 - `aiThinking` — boolean, prevents input during AI computation
 - `gameOver` — boolean
+- `notation` — `'chinese'` or `'wxf'` (move-history display format, default `'chinese'`)
 
 ### Key Functions
 | Function | Line | Purpose |
@@ -59,7 +70,10 @@ A browser-based Xiangqi (Chinese Chess) game built with vanilla HTML/CSS/JavaScr
 | `isKingsFacing()` | 410 | Flying general rule — kings on same column with no pieces between = illegal |
 | `isInCheck(color)` | 441 | Whether `color`'s king is under attack |
 | `makeMove()` | 473 | Executes a move, switches turn, records in history |
-| `undoMove()` | 494 | Reverses last move |
+| `undoMove()` | 495 | Reverses last move |
+| `toWXFMove()` | 515 | 4-digit WXF code: `{fromFile}{fromRank}{toFile}{toRank}` |
+| `toChineseMove()` | 542 | Traditional Chinese notation (進/退/平, red files 1-9 from right, black 1-9 from left, 前/後/中 disambiguation) |
+| `formatMove()` | 567 | Formats a history move using `game.notation` |
 | `evaluateBoard()` | 512 | Material evaluation for AI (soldiers worth more after crossing river) |
 | `minimax()` | 539 | Alpha-beta pruning AI search (uses `getAllLegalMoves`) |
 | `aiMove()` | 592 | AI entry point — color-aware, evaluates all legal moves via minimax |
@@ -127,7 +141,8 @@ A browser-based Xiangqi (Chinese Chess) game built with vanilla HTML/CSS/JavaScr
 - **AI Difficulty** dropdown (Easy/Medium/Hard = depth 1/2/3)
 - **Undo move** — undoes 2 moves in AI mode (AI+human pair), 1 in human mode
 - **Flip board** — mirrors the board display via coordinate transformation
-- **Move history** — scrollable list in sidebar
+- **Move history** — scrollable list in sidebar, rendered in traditional Chinese or WXF notation
+- **Notation toggle** — button switches the move-history format between `中文` (e.g. 炮八平五) and `WXF` (e.g. 俥 0919)
 - **Captured pieces** — displayed below the board for both sides
 - **Game-over modal** — overlay with result and "Play Again" button
 - **Click-to-select, click-to-move** with valid move indicators (yellow circles)
@@ -137,6 +152,7 @@ A browser-based Xiangqi (Chinese Chess) game built with vanilla HTML/CSS/JavaScr
 - **Session 1**: Initial project creation, pushed to GitHub. Fixed Example 1 endgame study (was unsolvable — no one-move checkmate existed). Fixed AI minimax to use `getAllLegalMoves` instead of `getAllMoves`.
 - **Session 2**: Removed unused `getAllMoves` function. Fixed flip board button (was toggling state but `drawBoard`/`drawPiece`/`getBoardCoords` never used it — added `boardToScreen`/`screenToBoard` helpers). Added Switch Sides feature (`game.humanColor`, color-aware `aiMove`, auto-flip, AI first move trigger).
 - **Session 3**: Added `README.md`; merged `PROJECT.md` documentation into this file.
+- **Session 4**: Added regression tests (`node --test`, sandboxed VM harness with DOM stubs). Added move-history notation: WXF digit code + traditional Chinese (進/退/平 with 前/後/中 disambiguation), with a toggle button.
 
 ## Known Issues / TODO Ideas
 - AI evaluation is material-only, no positional awareness or piece-square tables

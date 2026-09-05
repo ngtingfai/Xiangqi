@@ -75,6 +75,26 @@ body {
     color: #fff;
 }
 
+#notation-toggle {
+    margin-top: 10px;
+}
+
+#notation-toggle button {
+    width: 100%;
+    padding: 8px;
+    font-size: 13px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid #555;
+    color: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#notation-toggle button:hover {
+    background: rgba(255,255,255,0.2);
+}
+
 #move-history {
     max-height: 150px;
     overflow-y: auto;
