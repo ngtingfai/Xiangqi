@@ -436,3 +436,66 @@ describe('restorePosition', () => {
         assert.ok(html.includes('class="black-move">'));
     });
 });
+
+describe('evaluation bar', () => {
+    beforeEach(() => {
+        setBoard(api, [
+            [9, 4, 'king', 'red'],
+            [0, 4, 'king', 'black'],
+            [5, 0, 'chariot', 'red'],
+            [5, 1, 'horse', 'black']
+        ]);
+    });
+
+    it('centers the bar at the balanced start position', () => {
+        api.initBoard();
+        api.updateUI();
+        assert.strictEqual(api.__elements['eval-red-fill'].style.height, '50%');
+        assert.strictEqual(api.__elements['eval-black-fill'].style.height, '50%');
+        assert.strictEqual(api.__elements['eval-bar'].dataset.eval, '0');
+    });
+
+    it('reflects red material advantage after updateUI', () => {
+        assert.strictEqual(api.evaluateBoard(), 50);
+        api.updateUI();
+        assert.strictEqual(api.__elements['eval-red-fill'].style.height, '75%');
+        assert.strictEqual(api.__elements['eval-black-fill'].style.height, '25%');
+    });
+
+    it('recomputes the bar when a capture changes the evaluation', () => {
+        api.updateUI();
+        assert.strictEqual(api.__elements['eval-red-fill'].style.height, '75%');
+
+        api.makeMove(5, 0, 5, 1);
+        assert.strictEqual(api.evaluateBoard(), 90);
+        api.updateUI();
+        assert.strictEqual(api.__elements['eval-red-fill'].style.height, '95%');
+        assert.strictEqual(api.__elements['eval-black-fill'].style.height, '5%');
+    });
+
+    it('updates when restoring an earlier move from the table', () => {
+        api.makeMove(5, 0, 5, 1);
+        api.updateUI();
+        assert.strictEqual(api.__elements['eval-red-fill'].style.height, '95%');
+
+        api.restorePosition(-1);
+        assert.ok(api.__elements['eval-red-fill'].style.height.indexOf('75') === 0);
+        assert.strictEqual(api.__elements['eval-black-fill'].style.height, '25%');
+    });
+
+    it('clamps the bar within the eval range', () => {
+        setBoard(api, [
+            [9, 4, 'king', 'red'],
+            [0, 4, 'king', 'black'],
+            [5, 0, 'chariot', 'red'],
+            [6, 0, 'chariot', 'red'],
+            [7, 0, 'chariot', 'red'],
+            [8, 0, 'chariot', 'red'],
+            [5, 1, 'horse', 'black']
+        ]);
+        assert.ok(api.evaluateBoard() > api.EVAL_RANGE);
+        api.updateUI();
+        assert.strictEqual(api.__elements['eval-red-fill'].style.height, '100%');
+        assert.strictEqual(api.__elements['eval-black-fill'].style.height, '0%');
+    });
+});

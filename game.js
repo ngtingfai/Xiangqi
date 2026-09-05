@@ -49,6 +49,8 @@ const PIECE_VALUES = {
     soldier: 10
 };
 
+const EVAL_RANGE = 100;
+
 const game = {
     board: [],
     initialBoard: [],
@@ -966,6 +968,23 @@ function updateUI() {
     document.getElementById('black-captured-list').innerHTML = game.capturedPieces.black.map(p => 
         `<span class="captured-piece black">${getPieceSymbol(p)}</span>`
     ).join('');
+
+    updateEvalBar();
+}
+
+function updateEvalBar() {
+    const evalValue = evaluateBoard();
+    const clamped = Math.max(-EVAL_RANGE, Math.min(EVAL_RANGE, evalValue));
+    const redHeight = ((EVAL_RANGE + clamped) / (2 * EVAL_RANGE)) * 100;
+
+    const redFill = document.getElementById('eval-red-fill');
+    const blackFill = document.getElementById('eval-black-fill');
+    redFill.style.height = redHeight + '%';
+    blackFill.style.height = (100 - redHeight) + '%';
+
+    const bar = document.getElementById('eval-bar');
+    bar.title = `Evaluation: ${evalValue}${evalValue > 0 ? ' (Red)' : evalValue < 0 ? ' (Black)' : ' (Even)'}`;
+    bar.dataset.eval = String(evalValue);
 }
 
 document.getElementById('new-game-btn').addEventListener('click', () => {

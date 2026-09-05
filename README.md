@@ -15,17 +15,17 @@ A browser-based Xiangqi (Chinese Chess) game built with vanilla HTML/CSS/JavaScr
 ## Files
 | File | Lines | Purpose |
 |------|-------|---------|
-| `index.html` | 101 | Main HTML page with sidebar UI, canvas, notation panel, game-over modal |
-| `style.css` | 385 | Dark-themed UI styling with gradient background |
-| `game.js` | 1155 | All game logic, AI, rendering |
-| `test/harness.js` | 119 | Loads `game.js` in a sandboxed VM with DOM stubs |
-| `test/game.test.js` | 438 | Regression tests (rules, AI eval, checkmate/stalemate, notation, history restore) |
+| `index.html` | 110 | Main HTML page with sidebar UI, canvas, notation panel + eval bar, game-over modal |
+| `style.css` | 478 | Dark-themed UI styling with gradient background |
+| `game.js` | 1174 | All game logic, AI, rendering |
+| `test/harness.js` | 107 | Loads `game.js` in a sandboxed VM with DOM stubs |
+| `test/game.test.js` | 501 | Regression tests (rules, AI eval, checkmate/stalemate, notation, history restore, eval bar) |
 | `README.md` | — | This file — project documentation |
 
 ## Tests
 - Run with `node --test` from the repo root. Built-in `node:test` runner, zero dependencies.
 - `test/harness.js` evaluates `game.js` inside a `vm` context with stubbed `document`/canvas/`ctx`, then exposes the module's functions via a `globalThis.__api` epilogue. An element stub records event listeners so button handlers can be exercised via `.click()`.
-- Tests cover: standard setup, 44 legal opening moves each, palace/river helpers, board-flip transforms, per-piece move rules, kings-facing filter, check detection, pinned-piece rules, capture/undo, checkmate + stalemate (loss), evaluation values, WXF/Chinese notation incl. 前/後 disambiguation, and history restore (`restorePosition` replays ✅, branch truncation, captured-pieces recompute, clickable move links).
+- Tests cover: standard setup, 44 legal opening moves each, palace/river helpers, board-flip transforms, per-piece move rules, kings-facing filter, check detection, pinned-piece rules, capture/undo, checkmate + stalemate (loss), evaluation values, WXF/Chinese notation incl. 前/後 disambiguation, history restore (`restorePosition` replays ✅, branch truncation, captured-pieces recompute, clickable move links), and the evaluation bar (centering, red advantage, capture updates, restore updates, clamping).
 - Note: values returned by game.js come from a different JS realm (vm), so tests use `assert.deepEqual` (not `deepStrictEqual`) for objects/arrays.
 
 ## Architecture (game.js)
@@ -36,6 +36,7 @@ A browser-based Xiangqi (Chinese Chess) game built with vanilla HTML/CSS/JavaScr
 - Piece types: `king`, `advisor`, `elephant`, `horse`, `chariot`, `cannon`, `soldier`
 - Chinese symbols: `RED_PIECES` and `BLACK_PIECES` objects map type to character
 - `PIECE_VALUES` for AI evaluation
+- `EVAL_RANGE = 100` — full-scales the eval bar to roughly a chariot (± value), beyond which the bar clamps
 
 ### Game State (`game` object, line 52)
 - `board[][]` — 2D array, each cell is `{type, color}` or `null`
@@ -83,7 +84,8 @@ A browser-based Xiangqi (Chinese Chess) game built with vanilla HTML/CSS/JavaScr
 | `drawBoard()` | 753 | Renders board grid, river text, palace lines, pieces, selection, valid moves |
 | `drawPiece()` | 857 | Renders a single piece with circle, border, Chinese character (uses `boardToScreen`) |
 | `getBoardCoords()` | 884 | Converts click event to board coordinates (uses `screenToBoard`) |
-| `updateUI()` | 936 | Updates turn indicator, notation table, captured pieces display |
+| `updateUI()` | 938 | Updates turn indicator, notation table, captured pieces display, eval bar |
+| `updateEvalBar()` | 975 | Renders the eval bar: red fills from top proportional to `evaluateBoard()` (positive = Red), clamped to `±EVAL_RANGE`; updates on every `updateUI`, so move history clicks re-evaluate too |
 
 ### Event Listeners
 | Line | Element | Action |
@@ -149,6 +151,7 @@ A browser-based Xiangqi (Chinese Chess) game built with vanilla HTML/CSS/JavaScr
 - **Notation table** — its own panel to the right of the board; a scrollable table with move number, Red and Black columns
 - **Clickable moves** — clicking any move in the notation table restores the board to that exact position (Red/Black pairs by move number, current position highlighted in gold)
 - **Notation toggle** — button switches the table's format between `中文` (e.g. 炮八平五) and `WXF` (e.g. 俥 0919)
+- **Evaluation bar** — vertical bar to the left of the moves table; red fills from the top proportional to material advantage (positive = ahead for Red, negative = Black). Recomputes after every move **and** whenever a move is clicked to restore a previous position (via `updateUI`). Hover shows the numeric score; full scale ≈ one chariot (`EVAL_RANGE=100`).
 - **History branching** — making a new move from a restored position truncates all later moves
 - **Captured pieces** — displayed below the board for both sides
 - **Game-over modal** — overlay with result and "Play Again" button
@@ -161,6 +164,7 @@ A browser-based Xiangqi (Chinese Chess) game built with vanilla HTML/CSS/JavaScr
 - **Session 3**: Added `README.md`; merged `PROJECT.md` documentation into this file.
 - **Session 4**: Added regression tests (`node --test`, sandboxed VM harness with DOM stubs). Added move-history notation: WXF digit code + traditional Chinese (進/退/平 with 前/後/中 disambiguation), with a toggle button.
 - **Session 5**: Moved notation into its own table panel to the right of the board (move number + Red/Black columns). Made every move a clickable link that restores that position via `restorePosition(index)` (replays from `initialBoard` snapshot — recomputes board, turn, captured pieces; current position highlighted). Making a move from a restored position truncates later history. Pending AI moves are invalidated after restore/new game. 35 tests passing.
+- **Session 6**: Added an evaluation bar next to the moves table (vertical, red-from-top = Red advantage, clamped to `±EVAL_RANGE=100`). The bar re-renders on every `updateUI`, so it follows normal moves **and** clicking any move in the table to jump to that position re-evaluates the bar. 40 tests passing.
 
 ## Known Issues / TODO Ideas
 - AI evaluation is material-only, no positional awareness or piece-square tables

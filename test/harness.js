@@ -25,6 +25,7 @@ function createElement(id) {
         scrollTop: 0,
         scrollHeight: 0,
         dataset: {},
+        style: {},
         classList: {
             add() {},
             remove() {},
@@ -66,11 +67,12 @@ function loadGame() {
 
     const apiNames = [
         'game', 'BOARD_SIZE', 'BOARD_HEIGHT', 'CELL_SIZE', 'MARGIN',
+        'PIECE_VALUES', 'EVAL_RANGE',
         'initBoard', 'getValidMoves', 'getAllLegalMoves', 'isInCheck',
         'isKingsFacing', 'isInPalace', 'isAcrossRiver', 'boardToScreen',
         'screenToBoard', 'makeMove', 'undoMove', 'evaluateBoard',
         'getPieceSymbol', 'toWXFMove', 'toChineseMove', 'formatMove',
-        'updateUI', 'checkForCheckmate', 'restorePosition'
+        'updateUI', 'updateEvalBar', 'checkForCheckmate', 'restorePosition'
     ];
     const epilogue = `\n;globalThis.__api = { ${apiNames.join(', ')} };`;
 
