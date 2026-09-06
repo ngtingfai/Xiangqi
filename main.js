@@ -1,6 +1,4 @@
 canvas.addEventListener('click', (e) => {
-    if (!game.musicOn) enableMusic();
-    
     const coords = getBoardCoords(e);
     if (!coords) return;
     

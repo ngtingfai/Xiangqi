@@ -94,6 +94,20 @@ describe('music toggle', () => {
         assert.strictEqual(api.__elements['music-btn'].textContent, 'Music: Off');
         assert.strictEqual(api.__elements['music-btn'].className, '');
     });
+
+    it('does not enable music when interacting with the board', () => {
+        api.__elements['board'].click();
+        assert.strictEqual(api.game.musicOn, false);
+        assert.strictEqual(api.__elements['music-btn'].textContent, 'Music: Off');
+    });
+
+    it('keeps music off after the user toggles it off and plays a move', () => {
+        api.__elements['music-btn'].click();
+        api.__elements['music-btn'].click();
+        assert.strictEqual(api.game.musicOn, false);
+        api.__elements['board'].click();
+        assert.strictEqual(api.game.musicOn, false);
+    });
 });
 
 describe('move timing', () => {
