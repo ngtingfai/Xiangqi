@@ -1,24 +1,53 @@
 function getAllLegalMoves(color) {
     const moves = [];
+    let redKingR, redKingC, blackKingR, blackKingC;
+    for (let r = 0; r < BOARD_HEIGHT; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
+            const p = game.board[r][c];
+            if (p && p.type === 'king') {
+                if (p.color === 'red') {
+                    redKingR = r;
+                    redKingC = c;
+                } else {
+                    blackKingR = r;
+                    blackKingC = c;
+                }
+            }
+        }
+    }
     
     for (let r = 0; r < BOARD_HEIGHT; r++) {
         for (let c = 0; c < BOARD_SIZE; c++) {
             if (game.board[r][c] && game.board[r][c].color === color) {
                 const pieceMoves = getValidMoves(r, c);
-                pieceMoves.forEach(([tr, tc]) => {
+                for (let k = 0; k < pieceMoves.length; k++) {
+                    const tr = pieceMoves[k][0];
+                    const tc = pieceMoves[k][1];
                     const piece = game.board[r][c];
                     const captured = game.board[tr][tc];
                     
                     game.board[tr][tc] = piece;
                     game.board[r][c] = null;
                     
-                    if (!isInCheck(color) && !isKingsFacing()) {
+                    let kr = redKingR, kc = redKingC, br = blackKingR, bc = blackKingC;
+                    if (piece.type === 'king') {
+                        if (piece.color === 'red') {
+                            kr = tr;
+                            kc = tc;
+                        } else {
+                            br = tr;
+                            bc = tc;
+                        }
+                    }
+                    
+                    if (!isInCheck(color, color === 'red' ? kr : br, color === 'red' ? kc : bc) &&
+                        !isKingsFacing(kr, kc, br, bc)) {
                         moves.push([r, c, tr, tc]);
                     }
                     
                     game.board[r][c] = piece;
                     game.board[tr][tc] = captured;
-                });
+                }
             }
         }
     }
@@ -202,28 +231,34 @@ function getValidMoves(row, col) {
     return moves;
 }
 
-function isKingsFacing() {
-    let redKingRow, redKingCol, blackKingRow, blackKingCol;
-    
-    for (let r = 7; r <= 9; r++) {
-        for (let c = 3; c <= 5; c++) {
-            if (game.board[r][c] && game.board[r][c].type === 'king' && game.board[r][c].color === 'red') {
-                redKingRow = r;
-                redKingCol = c;
+function isKingsFacing(redKingRow, redKingCol, blackKingRow, blackKingCol) {
+    if (redKingRow === undefined || redKingCol === undefined ||
+        blackKingRow === undefined || blackKingCol === undefined) {
+        for (let r = 7; r <= 9; r++) {
+            for (let c = 3; c <= 5; c++) {
+                if (game.board[r][c] && game.board[r][c].type === 'king' && game.board[r][c].color === 'red') {
+                    redKingRow = r;
+                    redKingCol = c;
+                }
             }
+        }
+        
+        for (let r = 0; r <= 2; r++) {
+            for (let c = 3; c <= 5; c++) {
+                if (game.board[r][c] && game.board[r][c].type === 'king' && game.board[r][c].color === 'black') {
+                    blackKingRow = r;
+                    blackKingCol = c;
+                }
+            }
+        }
+        
+        if (redKingRow === undefined || blackKingRow === undefined) return false;
+    } else {
+        if (!isInPalace(redKingRow, redKingCol, 'red') || !isInPalace(blackKingRow, blackKingCol, 'black')) {
+            return false;
         }
     }
     
-    for (let r = 0; r <= 2; r++) {
-        for (let c = 3; c <= 5; c++) {
-            if (game.board[r][c] && game.board[r][c].type === 'king' && game.board[r][c].color === 'black') {
-                blackKingRow = r;
-                blackKingCol = c;
-            }
-        }
-    }
-    
-    if (redKingRow === undefined || blackKingRow === undefined) return false;
     if (redKingCol !== blackKingCol) return false;
     
     for (let r = blackKingRow + 1; r < redKingRow; r++) {
@@ -303,21 +338,21 @@ function computeMoveStatus(move) {
     return { status: POSITION_IDLE, chased: [] };
 }
 
-function isInCheck(color) {
-    let kingRow, kingCol;
-    
-    for (let r = 0; r < BOARD_HEIGHT; r++) {
-        for (let c = 0; c < BOARD_SIZE; c++) {
-            if (game.board[r][c] && game.board[r][c].type === 'king' && game.board[r][c].color === color) {
-                kingRow = r;
-                kingCol = c;
-                break;
+function isInCheck(color, kingRow, kingCol) {
+    if (kingRow === undefined) {
+        for (let r = 0; r < BOARD_HEIGHT; r++) {
+            for (let c = 0; c < BOARD_SIZE; c++) {
+                if (game.board[r][c] && game.board[r][c].type === 'king' && game.board[r][c].color === color) {
+                    kingRow = r;
+                    kingCol = c;
+                    break;
+                }
             }
+            if (kingRow !== undefined) break;
         }
-        if (kingRow !== undefined) break;
+        
+        if (kingRow === undefined) return true;
     }
-    
-    if (kingRow === undefined) return true;
     
     const opponent = color === 'red' ? 'black' : 'red';
     const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
