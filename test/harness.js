@@ -48,8 +48,12 @@ function createElement(id) {
     return el;
 }
 
+const SOURCE_FILES = ['board.js', 'rules.js', 'move.js', 'ai.js', 'render.js', 'main.js'];
+
 function loadGame() {
-    const src = fs.readFileSync(path.join(__dirname, '..', 'game.js'), 'utf8');
+    const src = SOURCE_FILES
+        .map(f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8'))
+        .join('\n');
 
     const elements = {};
     const document = {
@@ -97,7 +101,12 @@ function setBoard(api, pieces) {
     api.game.notation = 'chinese';
     api.game.aiThinking = false;
     api.game.historyIndex = -1;
+    api.game.musicOn = false;
     api.game.initialBoard = api.game.board.map(row => row.slice());
+    if (api.__elements['music-btn']) {
+        api.__elements['music-btn'].textContent = 'Music: Off';
+        api.__elements['music-btn'].className = '';
+    }
 }
 
 function hasMove(moves, fr, fc, tr, tc) {

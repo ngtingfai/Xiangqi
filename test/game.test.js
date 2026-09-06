@@ -499,3 +499,32 @@ describe('evaluation bar', () => {
         assert.strictEqual(api.__elements['eval-black-fill'].style.height, '0%');
     });
 });
+
+describe('music toggle', () => {
+    beforeEach(() => {
+        setBoard(api, [
+            [9, 4, 'king', 'red'],
+            [0, 4, 'king', 'black']
+        ]);
+    });
+
+    it('starts with music off', () => {
+        assert.strictEqual(api.game.musicOn, false);
+        assert.strictEqual(api.__elements['music-btn'].textContent, 'Music: Off');
+    });
+
+    it('turns music on and labels the button', () => {
+        api.__elements['music-btn'].click();
+        assert.strictEqual(api.game.musicOn, true);
+        assert.strictEqual(api.__elements['music-btn'].textContent, 'Music: On');
+        assert.strictEqual(api.__elements['music-btn'].className, 'music-active');
+    });
+
+    it('toggles music back off', () => {
+        api.__elements['music-btn'].click();
+        api.__elements['music-btn'].click();
+        assert.strictEqual(api.game.musicOn, false);
+        assert.strictEqual(api.__elements['music-btn'].textContent, 'Music: Off');
+        assert.strictEqual(api.__elements['music-btn'].className, '');
+    });
+});

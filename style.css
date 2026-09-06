@@ -59,6 +59,33 @@ body {
     font-weight: bold;
 }
 
+#music-toggle {
+    margin-bottom: 15px;
+}
+
+#music-toggle button {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    border: 2px solid #27ae60;
+    background: transparent;
+    color: #fff;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#music-toggle button:hover {
+    background: rgba(39, 174, 96, 0.25);
+    transform: translateY(-2px);
+}
+
+#music-toggle button.music-active {
+    background: #27ae60;
+    color: #fff;
+}
+
 .piece-indicator {
     font-size: 32px;
     padding: 5px 10px;
