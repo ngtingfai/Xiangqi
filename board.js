@@ -48,7 +48,8 @@ const game = {
     aiThinking: false,
     gameOver: false,
     notation: 'chinese',
-    musicOn: false
+    musicOn: false,
+    moveStartTime: Date.now()
 };
 
 let aiMoveSequence = 0;
@@ -109,6 +110,7 @@ function initBoard() {
     game.gameOver = false;
     game.aiThinking = false;
     game.historyIndex = -1;
+    game.moveStartTime = Date.now();
     game.initialBoard = game.board.map(row => row.slice());
     aiMoveSequence++;
     document.getElementById('game-over-overlay').classList.add('hidden');

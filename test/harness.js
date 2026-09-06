@@ -102,6 +102,7 @@ function setBoard(api, pieces) {
     api.game.aiThinking = false;
     api.game.historyIndex = -1;
     api.game.musicOn = false;
+    api.game.moveStartTime = Date.now();
     api.game.initialBoard = api.game.board.map(row => row.slice());
     if (api.__elements['music-btn']) {
         api.__elements['music-btn'].textContent = 'Music: Off';

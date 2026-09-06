@@ -17,21 +17,21 @@ A browser-based Xiangqi (Chinese Chess) game built with vanilla HTML/CSS/JavaScr
 |------|-------|---------|
 | `index.html` | 123 | Main HTML page with sidebar UI, canvas, notation panel + eval bar, background-music audio, game-over modal |
 | `style.css` | 505 | Dark-themed UI styling with gradient background |
-| `board.js` | 166 | Board model: constants, piece symbols, `game` state, `initBoard`, geometry/palace/river/flip helpers |
+| `board.js` | 168 | Board model: constants, piece symbols, `game` state, `initBoard`, geometry/palace/river/flip helpers |
 | `rules.js` | 266 | Movement rules: `getValidMoves`, `getAllLegalMoves`, `isInCheck`, `isKingsFacing` |
-| `move.js` | 158 | Move engine: `makeMove`, `undoMove`, `restorePosition`, notation (`toWXFMove`/`toChineseMove`/`formatMove`), `checkForCheckmate` |
-| `ai.js` | 144 | AI: `PIECE_VALUES`, `EVAL_RANGE`, `evaluateBoard`, `minimax`, `aiMove` |
-| `render.js` | 256 | Rendering + UI: canvas setup, `drawBoard`, `drawPiece`, `getBoardCoords`, `updateUI`, `updateEvalBar`, `showGameOver`, music functions |
+| `move.js` | 165 | Move engine: `makeMove` (records elapsed time), `undoMove`, `restorePosition`, notation (`toWXFMove`/`toChineseMove`/`formatMove`), `checkForCheckmate` |
+| `ai.js` | 145 | AI: `PIECE_VALUES`, `EVAL_RANGE`, `evaluateBoard`, `minimax`, `aiMove` |
+| `render.js` | 274 | Rendering + UI: canvas setup, `drawBoard`, `drawPiece`, `getBoardCoords`, `updateUI`, `updateEvalBar`, `formatElapsedTime`, `showGameOver`, music functions |
 | `main.js` | 229 | Wiring: all event listeners, canvas click handler, `ENDGAME_STUDIES`, startup |
-| `test/harness.js` | 116 | Loads the source files in order in a sandboxed VM with DOM stubs |
-| `test/game.test.js` | 530 | Regression tests (rules, AI eval, checkmate/stalemate, notation, history restore, eval bar, music toggle) |
+| `test/harness.js` | 117 | Loads the source files in order in a sandboxed VM with DOM stubs |
+| `test/game.test.js` | 562 | Regression tests (rules, AI eval, checkmate/stalemate, notation, history restore, eval bar, music toggle, move timing) |
 | `music/Qiu_Feng_Ci.ogg` | — | Background music track (see Background Music section below) |
 | `README.md` | — | This file — project documentation |
 
 ## Tests
 - Run with `node --test` from the repo root. Built-in `node:test` runner, zero dependencies.
 - `test/harness.js` evaluates the six source files (`board.js` → `rules.js` → `move.js` → `ai.js` → `render.js` → `main.js`, concatenated in that order, matching the `index.html` script tags) inside a `vm` context with stubbed `document`/canvas/`ctx`, then exposes the module's functions via a `globalThis.__api` epilogue. An element stub records event listeners so button handlers can be exercised via `.click()`.
-- Tests cover: standard setup, 44 legal opening moves each, palace/river helpers, board-flip transforms, per-piece move rules, kings-facing filter, check detection, pinned-piece rules, capture/undo, checkmate + stalemate (loss), evaluation values, WXF/Chinese notation incl. 前/後 disambiguation, history restore (`restorePosition` replays ✅, branch truncation, captured-pieces recompute, clickable move links), the evaluation bar (centering, red advantage, capture updates, restore updates, clamping), and the music toggle (off-by-default, on/off flipping).
+- Tests cover: standard setup, 44 legal opening moves each, palace/river helpers, board-flip transforms, per-piece move rules, kings-facing filter, check detection, pinned-piece rules, capture/undo, checkmate + stalemate (loss), evaluation values, WXF/Chinese notation incl. 前/後 disambiguation, history restore (`restorePosition` replays ✅, branch truncation, captured-pieces recompute, clickable move links), the evaluation bar (centering, red advantage, capture updates, restore updates, clamping), the music toggle (off-by-default, on/off flipping), and move timing (elapsed recording, clock reset, table rendering).
 - Note: values returned by the sources come from a different JS realm (vm), so tests use `assert.deepEqual` (not `deepStrictEqual`) for objects/arrays.
 
 ## Architecture (client-side, no build step)
@@ -70,6 +70,7 @@ The game is split into six plain scripts loaded in dependency order from `index.
 - `gameOver` — boolean
 - `notation` — `'chinese'` or `'wxf'` (move-history display format, default `'chinese'`)
 - `musicOn` — boolean, whether background music is playing (default `false`)
+- `moveStartTime` — timestamp marking when the current player's clock started, used by `makeMove` to record each move's elapsed time (`timeMs` on the history entry)
 
 ### Key Functions
 | Function | File | Purpose |
@@ -175,6 +176,7 @@ The game is split into six plain scripts loaded in dependency order from `index.
 - **Clickable moves** — clicking any move in the notation table restores the board to that exact position (Red/Black pairs by move number, current position highlighted in gold)
 - **Notation toggle** — button switches the table's format between `中文` (e.g. 炮八平五) and `WXF` (e.g. 俥 0919)
 - **Evaluation bar** — vertical bar to the left of the moves table; red fills from the top proportional to material advantage (positive = ahead for Red, negative = Black). Recomputes after every move **and** whenever a move is clicked to restore a previous position (via `updateUI`). Hover shows the numeric score; full scale ≈ one chariot (`EVAL_RANGE=100`).
+- **Per-move elapsed time** — each move in the notation table shows the actual time the mover spent on it (e.g. `8.4s`, `2:05`), recorded on the move in `makeMove`. The human's clock runs from when their turn starts until they move; the computer's clock runs from when `aiMove` begins thinking until it makes the move. Note: move times apply to real games only — when study **solutions** (preset move sequences) are added later, they will not report actual times.
 - **Background music** — lo-fi guqin piece that starts automatically once you begin playing (first board interaction satisfies the browser autoplay policy) and can be toggled anytime with the **Music** button in the sidebar.
 - **History branching** — making a new move from a restored position truncates all later moves
 - **Captured pieces** — displayed below the board for both sides
@@ -196,6 +198,7 @@ The game is split into six plain scripts loaded in dependency order from `index.
 - **Session 6**: Added an evaluation bar next to the moves table (vertical, red-from-top = Red advantage, clamped to `±EVAL_RANGE=100`). The bar re-renders on every `updateUI`, so it follows normal moves **and** clicking any move in the table to jump to that position re-evaluates the bar. 40 tests passing.
 - **Session 7**: Added background music — downloaded the CC BY 2.5 guqin piece 《秋風詞》 (Qiu Feng Ci, Charlie Huang) from Wikimedia Commons into `music/`. Audio starts on the player's first board click (autoplay policy) and a **Music** button toggles it on/off. 43 tests passing.
 - **Session 8**: Split the 1224-line monolith `game.js` into six load-ordered scripts — `board.js` (state/geometry), `rules.js`, `move.js`, `ai.js`, `render.js`, `main.js` — with identical behavior. The test harness now concatenates the same file list in the same order as the browser script tags. All 43 tests still pass; `game.js` removed.
+- **Session 9**: Added per-move elapsed time — `makeMove` records `timeMs` (elapsed since `game.moveStartTime`), the AI's clock starts when `aiMove` begins thinking, and the notation table shows the actual time next to each move (`formatElapsedTime`: `8.4s` / `2:05`). 46 tests passing. (Studies solutions, when added later, will not report times.)
 
 ## Known Issues / TODO Ideas
 - AI evaluation is material-only, no positional awareness or piece-square tables

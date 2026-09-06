@@ -230,6 +230,13 @@ body {
     text-decoration: none;
 }
 
+.move-time {
+    font-size: 10px;
+    opacity: 0.6;
+    margin-left: 4px;
+    font-weight: normal;
+}
+
 #controls {
     display: flex;
     flex-direction: column;

@@ -528,3 +528,35 @@ describe('music toggle', () => {
         assert.strictEqual(api.__elements['music-btn'].className, '');
     });
 });
+
+describe('move timing', () => {
+    beforeEach(() => {
+        setBoard(api, [
+            [9, 4, 'king', 'red'],
+            [0, 4, 'king', 'black'],
+            [9, 0, 'chariot', 'red']
+        ]);
+    });
+
+    it('records the elapsed milliseconds on each move', () => {
+        api.game.moveStartTime = Date.now() - 5000;
+        api.makeMove(9, 0, 9, 1);
+        assert.strictEqual(api.game.moveHistory.length, 1);
+        assert.ok(Number.isFinite(api.game.moveHistory[0].timeMs));
+        assert.ok(api.game.moveHistory[0].timeMs >= 5000);
+    });
+
+    it('resets the move clock after the move is made', () => {
+        api.game.moveStartTime = Date.now() - 10000;
+        api.makeMove(9, 0, 9, 1);
+        assert.ok(api.game.moveStartTime > Date.now() - 1000);
+    });
+
+    it('renders the elapsed time next to each move in the notation table', () => {
+        api.game.moveStartTime = Date.now() - 15000;
+        api.makeMove(9, 0, 9, 1);
+        api.updateUI();
+        const html = api.__elements['notation-body'].innerHTML;
+        assert.ok(html.includes('class="move-time">15.0s'));
+    });
+});

@@ -182,7 +182,8 @@ function updateUI() {
         }
         const move = game.moveHistory[i];
         const currentClass = i === game.historyIndex ? ' current' : '';
-        const link = `<a href="#" class="move-link${currentClass}" data-move="${i}">${formatMove(move)}</a>`;
+        const timeLabel = formatElapsedTime(move.timeMs);
+        const link = `<a href="#" class="move-link${currentClass}" data-move="${i}">${formatMove(move)}<span class="move-time">${timeLabel}</span></a>`;
         tableHtml += `<td class="${i % 2 === 0 ? 'red-move' : 'black-move'}">${link}</td>`;
         if (i % 2 === 1) {
             tableHtml += `</tr>`;
@@ -203,6 +204,15 @@ function updateUI() {
     ).join('');
 
     updateEvalBar();
+}
+
+function formatElapsedTime(ms) {
+    if (ms == null) return '';
+    const seconds = ms / 1000;
+    if (seconds < 60) return seconds.toFixed(1) + 's';
+    const minutes = Math.floor(seconds / 60);
+    const rest = Math.round(seconds % 60);
+    return minutes + ':' + String(rest).padStart(2, '0');
 }
 
 function updateEvalBar() {

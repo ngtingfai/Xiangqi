@@ -4,6 +4,9 @@ function makeMove(fromRow, fromCol, toRow, toCol) {
         restorePosition(game.historyIndex);
     }
 
+    const now = Date.now();
+    const timeMs = Math.max(0, now - (game.moveStartTime || now));
+
     const piece = game.board[fromRow][fromCol];
     const captured = game.board[toRow][toCol];
     
@@ -18,9 +21,11 @@ function makeMove(fromRow, fromCol, toRow, toCol) {
         from: [fromRow, fromCol],
         to: [toRow, toCol],
         piece: piece,
-        captured: captured
+        captured: captured,
+        timeMs: timeMs
     });
     game.historyIndex = game.moveHistory.length - 1;
+    game.moveStartTime = now;
     
     game.currentTurn = game.currentTurn === 'red' ? 'black' : 'red';
 }
@@ -42,6 +47,7 @@ function undoMove() {
     game.currentTurn = game.currentTurn === 'red' ? 'black' : 'red';
     game.selectedPiece = null;
     game.historyIndex = game.moveHistory.length - 1;
+    game.moveStartTime = Date.now();
 }
 
 const CHINESE_NUMERALS = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
@@ -129,6 +135,7 @@ function restorePosition(index) {
     game.selectedPiece = null;
     game.gameOver = false;
     game.aiThinking = false;
+    game.moveStartTime = Date.now();
     aiMoveSequence++;
     document.getElementById('game-over-overlay').classList.add('hidden');
 

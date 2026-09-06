@@ -97,6 +97,7 @@ function aiMove() {
     const aiIsMaximizing = aiColor === 'red';
     
     game.aiThinking = true;
+    game.moveStartTime = Date.now();
     
     const token = ++aiMoveSequence;
     setTimeout(() => {
