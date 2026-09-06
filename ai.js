@@ -37,13 +37,25 @@ function evaluateBoard() {
     return score;
 }
 
+function moveScore(fr, fc, tr, tc) {
+    const captured = game.board[tr][tc];
+    if (!captured) return 0;
+    const attacker = game.board[fr][fc];
+    return 10 * PIECE_VALUES[captured.type] - (attacker ? PIECE_VALUES[attacker.type] : 0);
+}
+
+function orderMoves(moves) {
+    moves.sort((a, b) => moveScore(b[0], b[1], b[2], b[3]) - moveScore(a[0], a[1], a[2], a[3]));
+    return moves;
+}
+
 function minimax(depth, alpha, beta, isMaximizing) {
     if (depth === 0) {
         return evaluateBoard();
     }
     
     const color = isMaximizing ? 'red' : 'black';
-    const moves = getAllLegalMoves(color);
+    const moves = orderMoves(getAllLegalMoves(color));
     
     if (moves.length === 0) {
         return isMaximizing ? -100000 : 100000;
@@ -102,7 +114,7 @@ function aiMove() {
     const token = ++aiMoveSequence;
     setTimeout(() => {
         if (token !== aiMoveSequence) return;
-        const moves = getAllLegalMoves(aiColor);
+        const moves = orderMoves(getAllLegalMoves(aiColor));
         if (moves.length === 0) {
             game.gameOver = true;
             const winner = aiColor === 'red' ? 'Black' : 'Red';

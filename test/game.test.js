@@ -184,6 +184,29 @@ describe('check and legal-move filtering', () => {
         assert.strictEqual(api.isInCheck('red'), true);
     });
 
+    it('detects check by a cannon over exactly one screen', () => {
+        setBoard(api, [[9, 4, 'king', 'red'], [5, 4, 'cannon', 'black']]);
+        assert.strictEqual(api.isInCheck('red'), false);
+        api.game.board[7][4] = { type: 'soldier', color: 'red' };
+        assert.strictEqual(api.isInCheck('red'), true);
+    });
+
+    it('detects check by a soldier (forward and lateral)', () => {
+        setBoard(api, [[9, 4, 'king', 'red'], [8, 4, 'soldier', 'black']]);
+        assert.strictEqual(api.isInCheck('red'), true);
+        setBoard(api, [[9, 4, 'king', 'red'], [9, 3, 'soldier', 'black']]);
+        assert.strictEqual(api.isInCheck('red'), true);
+        setBoard(api, [[9, 4, 'king', 'red'], [9, 3, 'soldier', 'red']]);
+        assert.strictEqual(api.isInCheck('red'), false);
+    });
+
+    it('horse check is blocked by the leg piece', () => {
+        setBoard(api, [[9, 3, 'king', 'red'], [7, 2, 'horse', 'black'], [8, 2, 'soldier', 'red']]);
+        assert.strictEqual(api.isInCheck('red'), false);
+        api.game.board[8][2] = null;
+        assert.strictEqual(api.isInCheck('red'), true);
+    });
+
     it('pinned piece cannot leave the king file but may capture the pinner', () => {
         setBoard(api, [[9, 4, 'king', 'red'], [0, 4, 'chariot', 'black'], [5, 4, 'chariot', 'red']]);
         assert.strictEqual(api.isInCheck('red'), false);

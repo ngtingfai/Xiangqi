@@ -250,15 +250,102 @@ function isInCheck(color) {
     if (kingRow === undefined) return true;
     
     const opponent = color === 'red' ? 'black' : 'red';
+    const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
     
-    for (let r = 0; r < BOARD_HEIGHT; r++) {
-        for (let c = 0; c < BOARD_SIZE; c++) {
-            if (game.board[r][c] && game.board[r][c].color === opponent) {
-                const moves = getValidMoves(r, c);
-                if (moves.some(([mr, mc]) => mr === kingRow && mc === kingCol)) {
+    for (const [dr, dc] of dirs) {
+        let r = kingRow + dr;
+        let c = kingCol + dc;
+        let foundScreen = false;
+        while (isValidPos(r, c)) {
+            const piece = game.board[r][c];
+            if (piece) {
+                if (!foundScreen) {
+                    if (piece.color === opponent && piece.type === 'chariot') {
+                        return true;
+                    }
+                    foundScreen = true;
+                } else {
+                    if (piece.color === opponent && piece.type === 'cannon') {
+                        return true;
+                    }
+                    break;
+                }
+            }
+            r += dr;
+            c += dc;
+        }
+    }
+    
+    const horseMoves = [
+        [-2, -1, -1, 0], [-2, 1, -1, 0],
+        [2, -1, 1, 0], [2, 1, 1, 0],
+        [-1, -2, 0, -1], [-1, 2, 0, 1],
+        [1, -2, 0, -1], [1, 2, 0, 1]
+    ];
+    for (const [dr, dc, br, bc] of horseMoves) {
+        const sr = kingRow - dr;
+        const sc = kingCol - dc;
+        if (!isValidPos(sr, sc)) continue;
+        const piece = game.board[sr][sc];
+        if (piece && piece.color === opponent && piece.type === 'horse') {
+            if (!game.board[sr + br][sc + bc]) {
+                return true;
+            }
+        }
+    }
+    
+    for (const [dr, dc] of [[-2, -2], [-2, 2], [2, -2], [2, 2]]) {
+        const sr = kingRow + dr;
+        const sc = kingCol + dc;
+        if (!isValidPos(sr, sc)) continue;
+        const piece = game.board[sr][sc];
+        if (piece && piece.color === opponent && piece.type === 'elephant') {
+            if (opponent === 'red' && kingRow < 5) continue;
+            if (opponent === 'black' && kingRow > 4) continue;
+            if (!game.board[(sr + kingRow) / 2][(sc + kingCol) / 2]) {
+                return true;
+            }
+        }
+    }
+    
+    for (const [dr, dc] of [[-1, -1], [-1, 1], [1, -1], [1, 1]]) {
+        const sr = kingRow + dr;
+        const sc = kingCol + dc;
+        if (!isValidPos(sr, sc) || !isInPalace(kingRow, kingCol, opponent)) continue;
+        const piece = game.board[sr][sc];
+        if (piece && piece.color === opponent && piece.type === 'advisor') {
+            return true;
+        }
+    }
+    
+    const forwardRow = opponent === 'red' ? kingRow + 1 : kingRow - 1;
+    if (isValidPos(forwardRow, kingCol)) {
+        const piece = game.board[forwardRow][kingCol];
+        if (piece && piece.color === opponent && piece.type === 'soldier') {
+            return true;
+        }
+    }
+    
+    const crossed = color === 'red' ? kingRow >= 5 : kingRow <= 4;
+    if (crossed) {
+        for (const dc of [-1, 1]) {
+            const sc = kingCol + dc;
+            if (isValidPos(kingRow, sc)) {
+                const piece = game.board[kingRow][sc];
+                if (piece && piece.color === opponent && piece.type === 'soldier') {
                     return true;
                 }
             }
+        }
+    }
+    
+    for (const [dr, dc] of dirs) {
+        const r = kingRow + dr;
+        const c = kingCol + dc;
+        if (!isValidPos(r, c) || !isInPalace(r, c, opponent)) continue;
+        const piece = game.board[r][c];
+        if (piece && piece.color === opponent && piece.type === 'king') {
+            return true;
         }
     }
     

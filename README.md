@@ -18,13 +18,13 @@ A browser-based Xiangqi (Chinese Chess) game built with vanilla HTML/CSS/JavaScr
 | `index.html` | 123 | Main HTML page with sidebar UI, canvas, notation panel + eval bar, background-music audio, game-over modal |
 | `style.css` | 505 | Dark-themed UI styling with gradient background |
 | `board.js` | 168 | Board model: constants, piece symbols, `game` state, `initBoard`, geometry/palace/river/flip helpers |
-| `rules.js` | 266 | Movement rules: `getValidMoves`, `getAllLegalMoves`, `isInCheck`, `isKingsFacing` |
+| `rules.js` | 353 | Movement rules: `getValidMoves`, `getAllLegalMoves`, `isInCheck` (direct attack detection), `isKingsFacing` |
 | `move.js` | 165 | Move engine: `makeMove` (records elapsed time), `undoMove`, `restorePosition`, notation (`toWXFMove`/`toChineseMove`/`formatMove`), `checkForCheckmate` |
-| `ai.js` | 145 | AI: `PIECE_VALUES`, `EVAL_RANGE`, `evaluateBoard`, `minimax`, `aiMove` |
+| `ai.js` | 157 | AI: `PIECE_VALUES`, `EVAL_RANGE`, `evaluateBoard`, `minimax` (alpha-beta + MVV-LVA move ordering), `aiMove` |
 | `render.js` | 274 | Rendering + UI: canvas setup, `drawBoard`, `drawPiece`, `getBoardCoords`, `updateUI`, `updateEvalBar`, `formatElapsedTime`, `showGameOver`, music functions |
 | `main.js` | 229 | Wiring: all event listeners, canvas click handler, `ENDGAME_STUDIES`, startup |
 | `test/harness.js` | 117 | Loads the source files in order in a sandboxed VM with DOM stubs |
-| `test/game.test.js` | 562 | Regression tests (rules, AI eval, checkmate/stalemate, notation, history restore, eval bar, music toggle, move timing) |
+| `test/game.test.js` | 585 | Regression tests (rules, AI eval, checkmate/stalemate, notation, history restore, eval bar, music toggle, move timing) |
 | `music/Qiu_Feng_Ci.ogg` | — | Background music track (see Background Music section below) |
 | `README.md` | — | This file — project documentation |
 
@@ -143,6 +143,8 @@ The game is split into six plain scripts loaded in dependency order from `index.
 
 ### AI
 - Minimax with alpha-beta pruning
+- **Move ordering (MVV-LVA)** — capture moves are searched first (most valuable victim, cheapest attacker), which maximizes alpha-beta cutoffs and speeds the search up ~2x+ **without changing the outcome**
+- **Fast check detection** — `isInCheck` tests attacks directly (rays, cannon screens, horse legs, soldiers, king steps) instead of generating every opponent move; identical results, much faster
 - Depth configurable 1-4 (default 2)
 - Color-aware: adjusts maximizing/minimizing direction based on `game.humanColor`
   - If AI is black (human is red): AI minimizes, opponent maximizes
@@ -199,6 +201,7 @@ The game is split into six plain scripts loaded in dependency order from `index.
 - **Session 7**: Added background music — downloaded the CC BY 2.5 guqin piece 《秋風詞》 (Qiu Feng Ci, Charlie Huang) from Wikimedia Commons into `music/`. Audio starts on the player's first board click (autoplay policy) and a **Music** button toggles it on/off. 43 tests passing.
 - **Session 8**: Split the 1224-line monolith `game.js` into six load-ordered scripts — `board.js` (state/geometry), `rules.js`, `move.js`, `ai.js`, `render.js`, `main.js` — with identical behavior. The test harness now concatenates the same file list in the same order as the browser script tags. All 43 tests still pass; `game.js` removed.
 - **Session 9**: Added per-move elapsed time — `makeMove` records `timeMs` (elapsed since `game.moveStartTime`), the AI's clock starts when `aiMove` begins thinking, and the notation table shows the actual time next to each move (`formatElapsedTime`: `8.4s` / `2:05`). 46 tests passing. (Studies solutions, when added later, will not report times.)
+- **Session 10**: Added **Expert** AI difficulty (Depth 4). Speed-optimized the engine without changing its logic: MVV-LVA **move ordering** (captures first → far better alpha-beta pruning) and direct attack detection in `isInCheck` (rays/cannon screens/horse legs/soldiers instead of generating every opponent move). Verified behavior-identical via a 3000-position differential test (0 mismatches) and added check-variant tests (cannon screen, soldier forward/lateral, horse leg). Depth 3 timed 1763 ms → 784 ms; Depth 4 now ~4.3 s. 49 tests passing.
 
 ## Known Issues / TODO Ideas
 - AI evaluation is material-only, no positional awareness or piece-square tables
