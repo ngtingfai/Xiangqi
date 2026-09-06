@@ -1,10 +1,17 @@
 canvas.addEventListener('click', (e) => {
     if (!game.musicOn) enableMusic();
-    if (game.gameOver || game.aiThinking) return;
-    if (game.vsAI && game.currentTurn !== game.humanColor) return;
     
     const coords = getBoardCoords(e);
     if (!coords) return;
+    
+    if (game.setupMode) {
+        placeSetupPiece(coords[0], coords[1]);
+        drawBoard();
+        return;
+    }
+    
+    if (game.gameOver || game.aiThinking) return;
+    if (game.vsAI && game.currentTurn !== game.humanColor) return;
     
     const [row, col] = coords;
     const piece = game.board[row][col];
@@ -47,6 +54,7 @@ document.getElementById('new-game-btn').addEventListener('click', () => {
 });
 
 document.getElementById('undo-btn').addEventListener('click', () => {
+    if (game.setupMode) return;
     if (game.vsAI && game.moveHistory.length >= 2) {
         undoMove();
         undoMove();
@@ -78,6 +86,47 @@ document.getElementById('notation-btn').addEventListener('click', () => {
     document.getElementById('notation-btn').textContent = game.notation === 'chinese' ? 'Notation: 中文' : 'Notation: WXF';
     updateUI();
 });
+
+document.getElementById('setup-btn').addEventListener('click', () => {
+    if (game.setupMode) {
+        cancelPositionSetup();
+    } else {
+        startPositionSetup();
+    }
+});
+
+const paletteEl = document.getElementById('setup-palette');
+const paletteTypes = Object.keys(RED_PIECES);
+['red', 'black'].forEach(color => {
+    paletteTypes.forEach(key => {
+        const btn = document.createElement('button');
+        btn.className = 'setup-piece-btn ' + (color === 'red' ? 'red-piece' : 'black-piece');
+        btn.dataset.type = key.toLowerCase();
+        btn.dataset.color = color;
+        btn.textContent = color === 'red' ? RED_PIECES[key] : BLACK_PIECES[key];
+        btn.title = color + ' ' + key.toLowerCase();
+        btn.addEventListener('click', () => selectSetupPiece(btn.dataset.type, btn.dataset.color));
+        paletteEl.appendChild(btn);
+    });
+});
+
+document.getElementById('setup-eraser-btn').addEventListener('click', selectSetupEraser);
+document.getElementById('setup-clear-btn').addEventListener('click', clearSetupBoard);
+document.getElementById('setup-standard-btn').addEventListener('click', loadSetupStandard);
+document.getElementById('setup-turn-red-btn').addEventListener('click', () => {
+    game.currentTurn = 'red';
+    updateSetupPalette();
+    updateUI();
+});
+document.getElementById('setup-turn-black-btn').addEventListener('click', () => {
+    game.currentTurn = 'black';
+    updateSetupPalette();
+    updateUI();
+});
+document.getElementById('setup-start-btn').addEventListener('click', () => {
+    commitPositionSetup();
+});
+document.getElementById('setup-cancel-btn').addEventListener('click', cancelPositionSetup);
 
 document.getElementById('ai-depth').addEventListener('change', (e) => {
     game.aiDepth = parseInt(e.target.value);
@@ -191,6 +240,8 @@ document.querySelectorAll('.study-btn').forEach(btn => {
         const studyIndex = parseInt(btn.dataset.study);
         const study = ENDGAME_STUDIES[studyIndex];
         
+        exitSetupMode();
+        
         game.board = Array(BOARD_HEIGHT).fill(null).map(() => Array(BOARD_SIZE).fill(null));
         study.setup(game.board);
         
@@ -227,3 +278,4 @@ initBoard();
 drawBoard();
 updateUI();
 updateMusicButton();
+updateSetupPalette();

@@ -31,6 +31,11 @@ function createElement(id) {
             remove() {},
             toggle() {}
         },
+        children: [],
+        appendChild(child) {
+            el.children.push(child);
+            return child;
+        },
         getBoundingClientRect() {
             return { left: 0, top: 0, width: 585, height: 655 };
         },
@@ -61,6 +66,9 @@ function loadGame() {
             if (!elements[id]) elements[id] = createElement(id);
             return elements[id];
         },
+        createElement(tag) {
+            return createElement(tag);
+        },
         querySelectorAll() {
             return [];
         }
@@ -80,7 +88,11 @@ function loadGame() {
         'screenToBoard', 'makeMove', 'undoMove', 'evaluateBoard',
         'getPieceSymbol', 'toWXFMove', 'toChineseMove', 'formatMove',
         'updateUI', 'updateEvalBar', 'checkForCheckmate', 'restorePosition',
-        'judgePlayer', 'judgeGame', 'judgeRepetition', 'positionHash'
+        'judgePlayer', 'judgeGame', 'judgeRepetition', 'positionHash',
+        'startPositionSetup', 'exitSetupMode', 'selectSetupPiece', 'selectSetupEraser',
+        'placeSetupPiece', 'clearSetupBoard', 'loadSetupStandard',
+        'validateSetupPosition', 'commitPositionSetup', 'cancelPositionSetup',
+        'updateSetupPalette'
     ];
     const epilogue = `\n;globalThis.__api = { ${apiNames.join(', ')} };`;
 

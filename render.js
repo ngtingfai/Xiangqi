@@ -169,7 +169,7 @@ function updateTurnText(extra) {
 }
 
 function updateUI() {
-    const inCheck = isInCheck(game.currentTurn);
+    const inCheck = game.setupMode ? false : isInCheck(game.currentTurn);
     updateTurnText(inCheck ? 'Check!' : null);
     document.getElementById('turn-piece').textContent = game.currentTurn === 'red' ? '帥' : '將';
     document.getElementById('turn-piece').className = 'piece-indicator ' + game.currentTurn;

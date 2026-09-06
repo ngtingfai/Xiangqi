@@ -49,7 +49,17 @@ const game = {
     gameOver: false,
     notation: 'chinese',
     musicOn: false,
-    moveStartTime: Date.now()
+    moveStartTime: Date.now(),
+    setupMode: false,
+    setupSelection: null,
+    setupBackupBoard: [],
+    setupBackupHistory: [],
+    setupBackupTurn: 'red',
+    setupBackupCaptured: { red: [], black: [] },
+    setupBackupIndex: -1,
+    setupBackupOver: false,
+    setupBackupOverTitle: 'Checkmate!',
+    setupBackupOverMessage: 'Red Wins!'
 };
 
 const POSITION_CANCEL = 0;
@@ -126,6 +136,184 @@ function initBoard() {
     game.initialBoard = game.board.map(row => row.slice());
     aiMoveSequence++;
     document.getElementById('game-over-overlay').classList.add('hidden');
+    exitSetupMode();
+}
+
+function startPositionSetup() {
+    game.setupMode = true;
+    game.setupBackupBoard = game.board.map(row => row.slice());
+    game.setupBackupHistory = game.moveHistory.slice();
+    game.setupBackupTurn = game.currentTurn;
+    game.setupBackupCaptured = {
+        red: game.capturedPieces.red.slice(),
+        black: game.capturedPieces.black.slice()
+    };
+    game.setupBackupIndex = game.historyIndex;
+    game.setupBackupOver = game.gameOver;
+    game.setupBackupOverTitle = document.getElementById('game-over-title').textContent;
+    game.setupBackupOverMessage = document.getElementById('game-over-message').textContent;
+
+    game.board = Array(BOARD_HEIGHT).fill(null).map(() => Array(BOARD_SIZE).fill(null));
+    game.currentTurn = 'red';
+    game.selectedPiece = null;
+    game.moveHistory = [];
+    game.capturedPieces = { red: [], black: [] };
+    game.gameOver = false;
+    game.aiThinking = false;
+    game.historyIndex = -1;
+    game.setupSelection = null;
+    game.moveStartTime = Date.now();
+    aiMoveSequence++;
+
+    document.getElementById('game-over-overlay').classList.add('hidden');
+    document.getElementById('setup-panel').classList.remove('hidden');
+    document.getElementById('setup-message').textContent = '';
+    updateSetupPalette();
+    drawBoard();
+    updateUI();
+}
+
+function exitSetupMode() {
+    game.setupMode = false;
+    game.setupSelection = null;
+    document.getElementById('setup-panel').classList.add('hidden');
+}
+
+function selectSetupPiece(type, color) {
+    game.setupSelection = { type, color };
+    updateSetupPalette();
+}
+
+function selectSetupEraser() {
+    game.setupSelection = null;
+    updateSetupPalette();
+}
+
+function placeSetupPiece(row, col) {
+    if (!isValidPos(row, col)) return;
+    if (game.setupSelection) {
+        game.board[row][col] = { type: game.setupSelection.type, color: game.setupSelection.color };
+    } else {
+        game.board[row][col] = null;
+    }
+}
+
+function clearSetupBoard() {
+    game.board = Array(BOARD_HEIGHT).fill(null).map(() => Array(BOARD_SIZE).fill(null));
+    drawBoard();
+    updateUI();
+}
+
+function loadSetupStandard() {
+    initBoard();
+    game.setupMode = true;
+    game.setupBackupBoard = game.board.map(row => row.slice());
+    game.setupBackupHistory = [];
+    game.setupBackupTurn = 'red';
+    game.setupBackupCaptured = { red: [], black: [] };
+    game.setupBackupIndex = -1;
+    game.setupBackupOver = false;
+    game.setupSelection = null;
+    document.getElementById('setup-panel').classList.remove('hidden');
+    document.getElementById('setup-message').textContent = '';
+    updateSetupPalette();
+    drawBoard();
+    updateUI();
+}
+
+function updateSetupPalette() {
+    document.querySelectorAll('.setup-piece-btn').forEach(btn => {
+        const active = game.setupSelection &&
+            btn.dataset.type === game.setupSelection.type &&
+            btn.dataset.color === game.setupSelection.color;
+        btn.classList.toggle('active', active);
+    });
+    const eraser = document.getElementById('setup-eraser-btn');
+    if (eraser) eraser.classList.toggle('active', !game.setupSelection);
+    const redTurn = document.getElementById('setup-turn-red-btn');
+    const blackTurn = document.getElementById('setup-turn-black-btn');
+    if (redTurn) redTurn.classList.toggle('active', game.currentTurn === 'red');
+    if (blackTurn) blackTurn.classList.toggle('active', game.currentTurn === 'black');
+}
+
+function validateSetupPosition() {
+    const redKings = [];
+    const blackKings = [];
+    for (let r = 0; r < BOARD_HEIGHT; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
+            if (game.board[r][c] && game.board[r][c].type === 'king') {
+                if (game.board[r][c].color === 'red') {
+                    redKings.push([r, c]);
+                } else {
+                    blackKings.push([r, c]);
+                }
+            }
+        }
+    }
+    if (redKings.length !== 1) return 'Red needs exactly one king.';
+    if (blackKings.length !== 1) return 'Black needs exactly one king.';
+    const [rr, rc] = redKings[0];
+    const [br, bc] = blackKings[0];
+    if (!isInPalace(rr, rc, 'red')) return 'The Red king must be placed in its palace.';
+    if (!isInPalace(br, bc, 'black')) return 'The Black king must be placed in its palace.';
+    if (rc === bc) {
+        for (let r = br + 1; r < rr; r++) {
+            if (game.board[r][rc]) return null;
+        }
+        return 'The two kings cannot face each other with an empty file.';
+    }
+    return null;
+}
+
+function commitPositionSetup() {
+    const message = validateSetupPosition();
+    if (message) {
+        document.getElementById('setup-message').textContent = message;
+        return false;
+    }
+    document.getElementById('setup-message').textContent = '';
+    game.setupMode = false;
+    game.setupSelection = null;
+    game.selectedPiece = null;
+    game.moveHistory = [];
+    game.capturedPieces = { red: [], black: [] };
+    game.gameOver = false;
+    game.aiThinking = false;
+    game.historyIndex = -1;
+    game.moveStartTime = Date.now();
+    game.initialBoard = game.board.map(row => row.slice());
+    aiMoveSequence++;
+    document.getElementById('setup-panel').classList.add('hidden');
+    drawBoard();
+    updateUI();
+    checkForCheckmate();
+    if (game.vsAI && !game.gameOver && game.currentTurn !== game.humanColor) {
+        aiMove();
+    }
+    return true;
+}
+
+function cancelPositionSetup() {
+    game.board = game.setupBackupBoard.map(row => row.slice());
+    game.moveHistory = game.setupBackupHistory;
+    game.currentTurn = game.setupBackupTurn;
+    game.capturedPieces = {
+        red: game.setupBackupCaptured.red.slice(),
+        black: game.setupBackupCaptured.black.slice()
+    };
+    game.historyIndex = game.setupBackupIndex;
+    game.gameOver = game.setupBackupOver;
+    game.aiThinking = false;
+    game.setupMode = false;
+    game.setupSelection = null;
+    game.selectedPiece = null;
+    aiMoveSequence++;
+    document.getElementById('setup-panel').classList.add('hidden');
+    if (game.gameOver) {
+        showGameOver(game.setupBackupOverTitle || 'Checkmate!', game.setupBackupOverMessage || 'Red Wins!');
+    }
+    drawBoard();
+    updateUI();
 }
 
 function getPieceSymbol(piece) {
