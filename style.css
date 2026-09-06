@@ -68,7 +68,7 @@ body {
     padding: 10px;
     font-size: 14px;
     font-weight: bold;
-    border: 2px solid #27ae60;
+    border: 2px solid #e84393;
     background: transparent;
     color: #fff;
     border-radius: 8px;
@@ -77,12 +77,12 @@ body {
 }
 
 #music-toggle button:hover {
-    background: rgba(39, 174, 96, 0.25);
+    background: rgba(232, 67, 147, 0.25);
     transform: translateY(-2px);
 }
 
 #music-toggle button.music-active {
-    background: #27ae60;
+    background: #e84393;
     color: #fff;
 }
 

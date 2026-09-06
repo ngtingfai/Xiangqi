@@ -17,6 +17,10 @@ function drawBoard() {
         const x = MARGIN + i * CELL_SIZE;
         ctx.beginPath();
         ctx.moveTo(x, MARGIN);
+        ctx.lineTo(x, MARGIN + 4 * CELL_SIZE);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x, MARGIN + 5 * CELL_SIZE);
         ctx.lineTo(x, MARGIN + (BOARD_HEIGHT - 1) * CELL_SIZE);
         ctx.stroke();
     }
@@ -32,11 +36,15 @@ function drawBoard() {
     ctx.beginPath();
     ctx.moveTo(MARGIN, MARGIN + 4 * CELL_SIZE);
     ctx.lineTo(MARGIN + 4 * CELL_SIZE, MARGIN + 4 * CELL_SIZE);
-    ctx.lineTo(MARGIN + 4 * CELL_SIZE, MARGIN + 5 * CELL_SIZE);
+    ctx.moveTo(MARGIN, MARGIN + 4 * CELL_SIZE);
+    ctx.lineTo(MARGIN, MARGIN + 5 * CELL_SIZE);
+    ctx.moveTo(MARGIN + 4 * CELL_SIZE, MARGIN + 5 * CELL_SIZE);
     ctx.lineTo(MARGIN, MARGIN + 5 * CELL_SIZE);
     ctx.moveTo(MARGIN + 5 * CELL_SIZE, MARGIN + 4 * CELL_SIZE);
     ctx.lineTo(MARGIN + 8 * CELL_SIZE, MARGIN + 4 * CELL_SIZE);
+    ctx.moveTo(MARGIN + 8 * CELL_SIZE, MARGIN + 4 * CELL_SIZE);
     ctx.lineTo(MARGIN + 8 * CELL_SIZE, MARGIN + 5 * CELL_SIZE);
+    ctx.moveTo(MARGIN + 8 * CELL_SIZE, MARGIN + 5 * CELL_SIZE);
     ctx.lineTo(MARGIN + 5 * CELL_SIZE, MARGIN + 5 * CELL_SIZE);
     ctx.stroke();
     
