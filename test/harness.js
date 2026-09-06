@@ -72,11 +72,15 @@ function loadGame() {
     const apiNames = [
         'game', 'BOARD_SIZE', 'BOARD_HEIGHT', 'CELL_SIZE', 'MARGIN',
         'PIECE_VALUES', 'EVAL_RANGE',
+        'POSITION_CANCEL', 'POSITION_IDLE', 'POSITION_CHASE', 'POSITION_CHECK',
+        'VIOLATION_UNDECIDED', 'VIOLATION_IDLE', 'VIOLATION_CHASE', 'VIOLATION_CHECK',
+        'REPETITION_TIMES',
         'initBoard', 'getValidMoves', 'getAllLegalMoves', 'isInCheck',
         'isKingsFacing', 'isInPalace', 'isAcrossRiver', 'boardToScreen',
         'screenToBoard', 'makeMove', 'undoMove', 'evaluateBoard',
         'getPieceSymbol', 'toWXFMove', 'toChineseMove', 'formatMove',
-        'updateUI', 'updateEvalBar', 'checkForCheckmate', 'restorePosition'
+        'updateUI', 'updateEvalBar', 'checkForCheckmate', 'restorePosition',
+        'judgePlayer', 'judgeGame', 'judgeRepetition', 'positionHash'
     ];
     const epilogue = `\n;globalThis.__api = { ${apiNames.join(', ')} };`;
 

@@ -17,17 +17,26 @@ function makeMove(fromRow, fromCol, toRow, toCol) {
     game.board[toRow][toCol] = piece;
     game.board[fromRow][fromCol] = null;
     
-    game.moveHistory.push({
+    const entry = {
         from: [fromRow, fromCol],
         to: [toRow, toCol],
         piece: piece,
         captured: captured,
-        timeMs: timeMs
-    });
+        timeMs: timeMs,
+        hash: null,
+        status: POSITION_CANCEL,
+        chased: []
+    };
+    game.moveHistory.push(entry);
     game.historyIndex = game.moveHistory.length - 1;
     game.moveStartTime = now;
     
     game.currentTurn = game.currentTurn === 'red' ? 'black' : 'red';
+
+    const statusInfo = computeMoveStatus(entry);
+    entry.status = statusInfo.status;
+    entry.chased = statusInfo.chased;
+    entry.hash = positionHash();
 }
 
 function undoMove() {
@@ -48,6 +57,8 @@ function undoMove() {
     game.selectedPiece = null;
     game.historyIndex = game.moveHistory.length - 1;
     game.moveStartTime = Date.now();
+    game.gameOver = false;
+    document.getElementById('game-over-overlay').classList.add('hidden');
 }
 
 const CHINESE_NUMERALS = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
@@ -162,4 +173,106 @@ function checkForCheckmate() {
     } else if (inCheck) {
         updateTurnText('Check!');
     }
+    
+    if (!game.gameOver) {
+        judgeRepetition();
+    }
+}
+
+function positionHash() {
+    let s = '';
+    for (let r = 0; r < BOARD_HEIGHT; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
+            const p = game.board[r][c];
+            s += p ? p.color[0] + p.type : '.';
+        }
+    }
+    return s + game.currentTurn[0];
+}
+
+function judgePlayer(index, ntimes) {
+    const history = game.moveHistory;
+    if (index < 0) return VIOLATION_UNDECIDED;
+    if (history[index].status === POSITION_CANCEL) return VIOLATION_UNDECIDED;
+
+    const hash = history[index].hash;
+    let status = history[index].status;
+    let chasedSet = new Set(history[index].chased);
+    let i = index - 2;
+    let repeating = false;
+    let occurrences = 1;
+
+    while (i >= 0) {
+        if (history[i + 1].status === POSITION_CANCEL || history[i].status === POSITION_CANCEL) break;
+
+        status |= history[i].status;
+
+        const mid = history[i + 1];
+        const fromKey = mid.from[0] + ',' + mid.from[1];
+        const toKey = mid.to[0] + ',' + mid.to[1];
+        if (chasedSet.has(toKey)) {
+            chasedSet.delete(toKey);
+            chasedSet.add(fromKey);
+        }
+
+        if (status === POSITION_CHASE) {
+            const next = new Set();
+            for (const key of chasedSet) {
+                if (history[i].chased.includes(key)) next.add(key);
+            }
+            chasedSet = next;
+            if (chasedSet.size === 0) status = POSITION_IDLE;
+        }
+
+        if (hash === history[i].hash) {
+            occurrences += 1;
+            if (occurrences >= ntimes) {
+                repeating = true;
+                break;
+            }
+        }
+        i -= 2;
+    }
+
+    if (!repeating) return VIOLATION_UNDECIDED;
+    if (status === POSITION_CHECK) return VIOLATION_CHECK;
+    if (status === POSITION_CHASE) return VIOLATION_CHASE;
+    return VIOLATION_IDLE;
+}
+
+function judgeGame() {
+    const index = game.moveHistory.length - 1;
+    if (index < 1) return null;
+
+    const opponent = judgePlayer(index, REPETITION_TIMES);
+    if (opponent === VIOLATION_UNDECIDED) return null;
+
+    const ours = judgePlayer(index - 1, REPETITION_TIMES);
+    if (ours === VIOLATION_UNDECIDED) return null;
+
+    if (ours === opponent) return { result: 'draw', ours, opponent };
+    if (ours > opponent) return { result: 'loss', ours, opponent };
+    return { result: 'win', ours, opponent };
+}
+
+function judgeRepetition() {
+    const verdict = judgeGame();
+    if (!verdict) return false;
+
+    game.gameOver = true;
+    const currentColor = game.currentTurn;
+    const currentName = currentColor === 'red' ? 'Red' : 'Black';
+    const otherName = currentColor === 'red' ? 'Black' : 'Red';
+    const levelName = (level) => level === VIOLATION_CHECK ? 'Check' : 'Chase';
+
+    if (verdict.result === 'draw') {
+        const label = verdict.ours === VIOLATION_CHECK ? 'Mutual Perpetual Check' :
+                      verdict.ours === VIOLATION_CHASE ? 'Mutual Perpetual Chase' : 'Repetition';
+        showGameOver('Draw!', label + ' - Draw');
+    } else if (verdict.result === 'win') {
+        showGameOver('Perpetual ' + levelName(verdict.opponent) + '!', currentName + ' Wins!');
+    } else {
+        showGameOver('Perpetual ' + levelName(verdict.ours) + '!', otherName + ' Wins!');
+    }
+    return true;
 }

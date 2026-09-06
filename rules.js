@@ -233,6 +233,76 @@ function isKingsFacing() {
     return true;
 }
 
+function canLegallyCapture(color, fr, fc, tr, tc) {
+    const piece = game.board[fr][fc];
+    const victim = game.board[tr][tc];
+    if (!piece || !victim || victim.color === color) return false;
+    if (!getValidMoves(fr, fc).some(([r, c]) => r === tr && c === tc)) return false;
+
+    game.board[tr][tc] = piece;
+    game.board[fr][fc] = null;
+    const ok = !isInCheck(color) && !isKingsFacing();
+    game.board[fr][fc] = piece;
+    game.board[tr][tc] = victim;
+    return ok;
+}
+
+function isProtectedVictim(attacker, victim, vr, vc) {
+    if (PIECE_VALUES[victim.type] > PIECE_VALUES[attacker.type]) return false;
+    for (let r = 0; r < BOARD_HEIGHT; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
+            const defender = game.board[r][c];
+            if (!defender || defender.color !== victim.color || defender === victim) continue;
+            if (canLegallyCapture(victim.color, r, c, vr, vc)) return true;
+        }
+    }
+    return false;
+}
+
+function isExchangeAttack(attacker, victim, ar, ac, vr, vc) {
+    if (PIECE_VALUES[attacker.type] !== PIECE_VALUES[victim.type]) return false;
+    return canLegallyCapture(victim.color, vr, vc, ar, ac);
+}
+
+function computeMoveStatus(move) {
+    if (move.captured || move.piece.type === 'soldier') {
+        return { status: POSITION_CANCEL, chased: [] };
+    }
+
+    const mover = move.piece.color;
+    const opponent = mover === 'red' ? 'black' : 'red';
+
+    if (isInCheck(opponent)) {
+        return { status: POSITION_CHECK, chased: [] };
+    }
+
+    const victims = [];
+    for (let r = 0; r < BOARD_HEIGHT; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
+            const victim = game.board[r][c];
+            if (!victim || victim.color !== opponent) continue;
+            if (victim.type === 'king') continue;
+            if (victim.type === 'soldier' && !isAcrossRiver(r, opponent)) continue;
+
+            for (let ar = 0; ar < BOARD_HEIGHT; ar++) {
+                for (let ac = 0; ac < BOARD_SIZE; ac++) {
+                    const attacker = game.board[ar][ac];
+                    if (!attacker || attacker.color !== mover || attacker === victim) continue;
+                    if (!canLegallyCapture(mover, ar, ac, r, c)) continue;
+                    if (isExchangeAttack(attacker, victim, ar, ac, r, c)) continue;
+                    if (isProtectedVictim(attacker, victim, r, c)) continue;
+                    victims.push(r + ',' + c);
+                    break;
+                }
+            }
+        }
+    }
+
+    const unique = [...new Set(victims)];
+    if (unique.length === 1) return { status: POSITION_CHASE, chased: unique };
+    return { status: POSITION_IDLE, chased: [] };
+}
+
 function isInCheck(color) {
     let kingRow, kingCol;
     

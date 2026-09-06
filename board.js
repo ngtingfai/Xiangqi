@@ -52,6 +52,18 @@ const game = {
     moveStartTime: Date.now()
 };
 
+const POSITION_CANCEL = 0;
+const POSITION_IDLE = 1;
+const POSITION_CHASE = 2;
+const POSITION_CHECK = 4;
+
+const VIOLATION_UNDECIDED = -1;
+const VIOLATION_IDLE = 0;
+const VIOLATION_CHASE = 1;
+const VIOLATION_CHECK = 2;
+
+const REPETITION_TIMES = 3;
+
 let aiMoveSequence = 0;
 
 function initBoard() {
