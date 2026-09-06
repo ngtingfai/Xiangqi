@@ -143,7 +143,7 @@ The game is split into six plain scripts loaded in dependency order from `index.
 
 ### AI
 - Minimax with alpha-beta pruning
-- Depth configurable 1-3 (default 2)
+- Depth configurable 1-4 (default 2)
 - Color-aware: adjusts maximizing/minimizing direction based on `game.humanColor`
   - If AI is black (human is red): AI minimizes, opponent maximizes
   - If AI is red (human is black): AI maximizes, opponent minimizes
@@ -169,7 +169,7 @@ The game is split into six plain scripts loaded in dependency order from `index.
 ### UI Features
 - **vs Computer / vs Human** mode toggle
 - **Switch Sides** button (visible in AI mode) — swaps human/AI colors, auto-flips board, AI opens if Red
-- **AI Difficulty** dropdown (Easy/Medium/Hard = depth 1/2/3)
+- **AI Difficulty** dropdown (Easy/Medium/Hard/Expert = depth 1/2/3/4)
 - **Undo move** — undoes 2 moves in AI mode (AI+human pair), 1 in human mode
 - **Flip board** — mirrors the board display via coordinate transformation
 - **Notation table** — its own panel to the right of the board; a scrollable table with move number, Red and Black columns
