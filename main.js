@@ -158,8 +158,6 @@ document.getElementById('vs-human-btn').addEventListener('click', () => {
     document.getElementById('vs-human-btn').classList.add('active');
     document.getElementById('vs-ai-btn').classList.remove('active');
     document.getElementById('side-toggle').classList.add('hidden');
-    initBoard();
-    drawBoard();
     updateUI();
 });
 

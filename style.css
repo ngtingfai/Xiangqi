@@ -17,7 +17,7 @@ body {
 #app {
     display: flex;
     gap: 30px;
-    max-width: 1300px;
+    max-width: 1500px;
     width: 100%;
 }
 
@@ -110,7 +110,18 @@ body {
     border-radius: 15px;
     padding: 20px;
     color: #fff;
-    max-height: 920px;
+    max-height: 740px;
+}
+
+#utility-panel {
+    width: 250px;
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 20px;
+    color: #fff;
+    align-self: flex-start;
 }
 
 #notation-panel h3 {
@@ -277,8 +288,8 @@ body {
 
 #right-actions button {
     flex: 1;
-    padding: 10px;
-    font-size: 13px;
+    padding: 10px 6px;
+    font-size: 12px;
     font-weight: bold;
     border: none;
     border-radius: 8px;
@@ -331,10 +342,14 @@ body {
 
 .setup-piece-btn {
     aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border-radius: 50%;
     border: 2px solid #777;
     background: #f5deb3;
-    font-size: 16px;
+    font-size: 14px;
+    line-height: 1;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.15s;
@@ -632,6 +647,12 @@ body {
         width: 100%;
         max-width: 665px;
         max-height: 400px;
+    }
+    
+    #utility-panel {
+        width: 100%;
+        max-width: 665px;
+        align-self: center;
     }
 }
 

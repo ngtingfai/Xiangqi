@@ -33,12 +33,14 @@ const ENDGAME_EXAMPLES = [
     },
     {
         name: "Double Cannon",
-        description: "Red to move. Two Cannons can create a powerful mating net.",
+        description: "Red to move. Slide one Cannon onto the king's file — the rear Cannon then checks through it. The Black advisors block the king's side escapes, so it is mate. (Two Cannons make a powerful mating net.)",
         setup: (board) => {
             board[0][4] = { type: 'king', color: 'black' };
+            board[0][3] = { type: 'advisor', color: 'black' };
+            board[0][5] = { type: 'advisor', color: 'black' };
             board[9][3] = { type: 'king', color: 'red' };
-            board[2][4] = { type: 'cannon', color: 'red' };
-            board[4][4] = { type: 'cannon', color: 'red' };
+            board[2][5] = { type: 'cannon', color: 'red' };
+            board[6][4] = { type: 'cannon', color: 'red' };
             return board;
         }
     },

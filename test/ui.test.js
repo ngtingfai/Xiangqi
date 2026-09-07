@@ -143,6 +143,52 @@ describe('endgame examples toggle', () => {
     });
 });
 
+describe('vs-human mode switching', () => {
+    beforeEach(() => {
+        setBoard(api, [
+            [9, 4, 'king', 'red'],
+            [0, 4, 'king', 'black'],
+            [5, 0, 'chariot', 'red']
+        ]);
+        api.game.vsAI = true;
+    });
+
+    it('switches to vs-human without resetting the current position', () => {
+        api.__elements['vs-human-btn'].click();
+        assert.strictEqual(api.game.vsAI, false);
+        assert.strictEqual(api.game.board[5][0].type, 'chariot');
+        assert.ok(api.__elements['side-toggle'].className.includes('hidden'));
+        assert.ok(api.__elements['vs-human-btn'].className.includes('active'));
+        assert.ok(!api.__elements['vs-ai-btn'].className.includes('active'));
+    });
+
+    it('leaves an in-progress setup untouched when switching to vs-human', () => {
+        api.__elements['setup-btn'].click();
+        assert.strictEqual(api.game.setupMode, true);
+        api.game.board[5][0] = { type: 'cannon', color: 'black' };
+        api.__elements['vs-human-btn'].click();
+        assert.strictEqual(api.game.vsAI, false);
+        assert.strictEqual(api.game.setupMode, true);
+        assert.strictEqual(api.game.board[5][0].type, 'cannon');
+        assert.ok(!api.__elements['setup-panel'].className.includes('hidden'));
+    });
+
+    it('keeps a loaded example position playable by both sides after switching', () => {
+        setBoard(api, [
+            [9, 4, 'king', 'red'],
+            [0, 4, 'king', 'black'],
+            [9, 0, 'chariot', 'red']
+        ]);
+        api.game.vsAI = true;
+        api.__elements['examples-btn'].click();
+        api.__elements['vs-human-btn'].click();
+        assert.strictEqual(api.game.vsAI, false);
+        assert.strictEqual(api.game.board[9][0].type, 'chariot');
+        assert.strictEqual(api.game.board[9][4].type, 'king');
+        assert.deepStrictEqual(api.game.moveHistory, []);
+    });
+});
+
 describe('move timing', () => {
     beforeEach(() => {
         setBoard(api, [
