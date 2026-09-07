@@ -347,6 +347,14 @@ body {
     color: #e74c3c;
     min-height: 16px;
     margin-bottom: 8px;
+    white-space: pre-line;
+}
+
+#setup-validation-note {
+    font-size: 11px;
+    color: #95a5a6;
+    margin-top: 8px;
+    text-align: center;
 }
 
 #setup-palette {
@@ -692,6 +700,12 @@ body {
     margin-bottom: 30px;
 }
 
+#game-over-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
 #game-over-btn {
     padding: 12px 30px;
     font-size: 18px;
@@ -705,4 +719,19 @@ body {
 
 #game-over-btn:hover {
     background: #2ecc71;
+}
+
+#game-over-review-btn {
+    padding: 12px 30px;
+    font-size: 18px;
+    background: #34495e;
+    border: none;
+    color: #fff;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+#game-over-review-btn:hover {
+    background: #2c3e50;
 }

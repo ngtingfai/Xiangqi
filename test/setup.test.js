@@ -75,6 +75,82 @@ describe('position setup', () => {
         assert.ok(api.__elements['setup-message'].textContent.includes('cannot face each other'));
     });
 
+    it('rejects more pieces of a type than exist in the real game', () => {
+        setBoard(api, []);
+        api.startPositionSetup();
+        validPosition();
+        for (const c of [0, 1, 2]) {
+            api.selectSetupPiece('chariot', 'red');
+            api.placeSetupPiece(5, c);
+        }
+        assert.strictEqual(api.commitPositionSetup(), false);
+        assert.ok(api.__elements['setup-message'].textContent.includes('Red has too many chariots (max 2).'));
+    });
+
+    it('rejects elephants that could never get there (across the river, and off the elephant squares)', () => {
+        setBoard(api, []);
+        api.startPositionSetup();
+        validPosition();
+        api.selectSetupPiece('elephant', 'red');
+        api.placeSetupPiece(4, 2);
+        assert.strictEqual(api.commitPositionSetup(), false);
+        assert.ok(api.__elements['setup-message'].textContent.includes('A Red elephant is on a square no elephant can reach'));
+    });
+
+    it('rejects soldiers behind their starting rank', () => {
+        setBoard(api, []);
+        api.startPositionSetup();
+        validPosition();
+        api.selectSetupPiece('soldier', 'red');
+        api.placeSetupPiece(7, 3);
+        assert.strictEqual(api.commitPositionSetup(), false);
+        assert.ok(api.__elements['setup-message'].textContent.includes('A Red soldier cannot be behind its starting rank'));
+
+        api.startPositionSetup();
+        validPosition();
+        api.selectSetupPiece('soldier', 'black');
+        api.placeSetupPiece(2, 4);
+        assert.strictEqual(api.commitPositionSetup(), false);
+        assert.ok(api.__elements['setup-message'].textContent.includes('A Black soldier cannot be behind its starting rank'));
+    });
+
+    it('rejects advisors that are in the palace but not on a palace diagonal', () => {
+        setBoard(api, []);
+        api.startPositionSetup();
+        validPosition();
+        api.selectSetupPiece('advisor', 'red');
+        api.placeSetupPiece(8, 3);
+        assert.strictEqual(api.commitPositionSetup(), false);
+        assert.ok(api.__elements['setup-message'].textContent.includes('A Red advisor must sit on a palace diagonal square.'));
+    });
+
+    it('rejects a position where the side to move is already checking the opponent', () => {
+        setBoard(api, []);
+        api.startPositionSetup();
+        api.selectSetupPiece('king', 'red');
+        api.placeSetupPiece(9, 4);
+        api.selectSetupPiece('king', 'black');
+        api.placeSetupPiece(0, 4);
+        api.selectSetupPiece('chariot', 'red');
+        api.placeSetupPiece(1, 4);
+        assert.strictEqual(api.commitPositionSetup(), false);
+        assert.ok(api.__elements['setup-message'].textContent.includes('Red is to move, but Red is already giving check to the Black king.'));
+    });
+
+    it('accepts legal reachable pieces (elephant and advanced soldier)', () => {
+        setBoard(api, []);
+        api.startPositionSetup();
+        validPosition();
+        api.selectSetupPiece('elephant', 'red');
+        api.placeSetupPiece(7, 4);
+        api.selectSetupPiece('soldier', 'red');
+        api.placeSetupPiece(2, 3);
+        api.selectSetupPiece('advisor', 'black');
+        api.placeSetupPiece(2, 5);
+        assert.strictEqual(api.commitPositionSetup(), true);
+        assert.strictEqual(api.__elements['setup-message'].textContent, '');
+    });
+
     it('commits a valid setup position as a fresh game', () => {
         setBoard(api, []);
         validPosition();

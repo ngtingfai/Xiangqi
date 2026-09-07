@@ -111,6 +111,7 @@
                     <button id="setup-start-btn">Start Game</button>
                     <button id="setup-cancel-btn">Cancel</button>
                 </div>
+                <p id="setup-validation-note">Position is validated when you press Start Game.</p>
             </div>
             
             <div id="examples-panel" class="hidden">
@@ -136,7 +137,10 @@
         <div id="game-over-modal">
             <h2 id="game-over-title">Checkmate!</h2>
             <p id="game-over-message">Red Wins!</p>
-            <button id="game-over-btn">Play Again</button>
+            <div id="game-over-actions">
+                <button id="game-over-btn">Play Again</button>
+                <button id="game-over-review-btn">Game Review</button>
+            </div>
         </div>
     </div>
     

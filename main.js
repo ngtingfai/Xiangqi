@@ -247,6 +247,12 @@ document.getElementById('game-over-btn').addEventListener('click', () => {
     }
 });
 
+document.getElementById('game-over-review-btn').addEventListener('click', () => {
+    document.getElementById('game-over-overlay').classList.add('hidden');
+    drawBoard();
+    updateUI();
+});
+
 initBoard();
 drawBoard();
 updateUI();

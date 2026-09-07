@@ -287,3 +287,38 @@ describe('move timing', () => {
         assert.ok(html.includes('class="move-time">15.0s'));
     });
 });
+
+describe('game over review', () => {
+    beforeEach(() => {
+        setBoard(api, [
+            [9, 4, 'king', 'red'],
+            [0, 3, 'king', 'black'],
+            [5, 0, 'chariot', 'red']
+        ]);
+    });
+
+    it('Game Review closes the overlay and keeps the finished position for study', () => {
+        api.makeMove(5, 0, 5, 3);
+        api.checkForCheckmate();
+        assert.strictEqual(api.game.gameOver, true);
+        assert.ok(!api.__elements['game-over-overlay'].className.includes('hidden'));
+        assert.strictEqual(api.__elements['game-over-title'].textContent, 'Checkmate!');
+
+        api.__elements['game-over-review-btn'].click();
+        assert.ok(api.__elements['game-over-overlay'].className.includes('hidden'));
+        assert.strictEqual(api.game.gameOver, true);
+        assert.strictEqual(api.game.moveHistory.length, 1);
+        assert.strictEqual(api.game.board[5][3].type, 'chariot');
+        assert.strictEqual(api.game.board[0][3].type, 'king');
+    });
+
+    it('Play Again resets to a fresh game after review', () => {
+        api.makeMove(5, 0, 5, 3);
+        api.checkForCheckmate();
+        api.__elements['game-over-review-btn'].click();
+        api.__elements['game-over-btn'].click();
+        assert.strictEqual(api.game.moveHistory.length, 0);
+        assert.strictEqual(api.game.board[9][4].type, 'king');
+        assert.strictEqual(api.game.board[9][0].type, 'chariot');
+    });
+});
