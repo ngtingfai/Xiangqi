@@ -42,7 +42,15 @@ canvas.addEventListener('click', (e) => {
     }
 });
 
+function resetLaunchOptions() {
+    document.getElementById('setup-panel').classList.add('hidden');
+    document.getElementById('examples-panel').classList.add('hidden');
+    document.getElementById('setup-btn').classList.remove('active');
+    document.getElementById('examples-btn').classList.remove('active');
+}
+
 document.getElementById('new-game-btn').addEventListener('click', () => {
+    resetLaunchOptions();
     initBoard();
     drawBoard();
     updateUI();
@@ -85,22 +93,38 @@ document.getElementById('notation-btn').addEventListener('click', () => {
     updateUI();
 });
 
+document.getElementById('standard-btn').addEventListener('click', () => {
+    resetLaunchOptions();
+    initBoard();
+    drawBoard();
+    updateUI();
+    if (game.vsAI && game.humanColor === 'black') {
+        aiMove();
+    }
+});
+
 document.getElementById('setup-btn').addEventListener('click', () => {
-    document.getElementById('examples-panel').classList.add('hidden');
     if (game.setupMode) {
         cancelPositionSetup();
-    } else {
-        startPositionSetup();
+        document.getElementById('setup-btn').classList.remove('active');
+        return;
     }
+    document.getElementById('examples-panel').classList.add('hidden');
+    document.getElementById('examples-btn').classList.remove('active');
+    startPositionSetup();
+    document.getElementById('setup-btn').classList.add('active');
 });
 
 document.getElementById('examples-btn').addEventListener('click', () => {
     const panel = document.getElementById('examples-panel');
     if (panel.classList.contains('hidden')) {
         if (game.setupMode) cancelPositionSetup();
+        document.getElementById('setup-btn').classList.remove('active');
         panel.classList.remove('hidden');
+        document.getElementById('examples-btn').classList.add('active');
     } else {
         panel.classList.add('hidden');
+        document.getElementById('examples-btn').classList.remove('active');
     }
 });
 
@@ -133,9 +157,14 @@ document.getElementById('setup-turn-black-btn').addEventListener('click', () => 
     updateUI();
 });
 document.getElementById('setup-start-btn').addEventListener('click', () => {
-    commitPositionSetup();
+    if (commitPositionSetup()) {
+        document.getElementById('setup-btn').classList.remove('active');
+    }
 });
-document.getElementById('setup-cancel-btn').addEventListener('click', cancelPositionSetup);
+document.getElementById('setup-cancel-btn').addEventListener('click', () => {
+    cancelPositionSetup();
+    document.getElementById('setup-btn').classList.remove('active');
+});
 
 document.getElementById('ai-depth').addEventListener('change', (e) => {
     game.aiDepth = parseInt(e.target.value);
@@ -148,6 +177,7 @@ document.getElementById('vs-ai-btn').addEventListener('click', () => {
     document.getElementById('vs-human-btn').classList.remove('active');
     document.getElementById('side-toggle').classList.remove('hidden');
     document.getElementById('switch-sides-btn').textContent = 'Switch Sides (Play as Black)';
+    resetLaunchOptions();
     initBoard();
     drawBoard();
     updateUI();
@@ -166,6 +196,7 @@ document.getElementById('switch-sides-btn').addEventListener('click', () => {
     game.isFlipped = game.humanColor === 'black';
     const btn = document.getElementById('switch-sides-btn');
     btn.textContent = game.humanColor === 'red' ? 'Switch Sides (Play as Black)' : 'Switch Sides (Play as Red)';
+    resetLaunchOptions();
     initBoard();
     drawBoard();
     updateUI();
@@ -180,6 +211,8 @@ document.querySelectorAll('.study-btn').forEach(btn => {
         const study = ENDGAME_EXAMPLES[studyIndex];
         
         exitSetupMode();
+        document.getElementById('setup-btn').classList.remove('active');
+        document.getElementById('examples-btn').classList.add('active');
         
         game.board = Array(BOARD_HEIGHT).fill(null).map(() => Array(BOARD_SIZE).fill(null));
         study.setup(game.board);
@@ -205,6 +238,7 @@ document.querySelectorAll('.study-btn').forEach(btn => {
 });
 
 document.getElementById('game-over-btn').addEventListener('click', () => {
+    resetLaunchOptions();
     initBoard();
     drawBoard();
     updateUI();

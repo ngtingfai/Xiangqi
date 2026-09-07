@@ -280,27 +280,43 @@ body {
     color: #fff;
 }
 
-#right-actions {
-    display: flex;
-    gap: 8px;
+#launch-options {
     margin-bottom: 10px;
 }
 
-#right-actions button {
-    flex: 1;
-    padding: 10px 6px;
-    font-size: 12px;
+#launch-options h3 {
+    font-size: 18px;
+    color: #f1c40f;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+#launch-options button {
+    width: 100%;
+    padding: 10px;
+    font-size: 13px;
     font-weight: bold;
-    border: none;
+    border: 2px solid transparent;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s;
     color: #fff;
+    margin-bottom: 6px;
 }
 
-#right-actions button:hover {
+#launch-options button:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+#launch-options button.active {
+    border-color: #f1c40f;
+    box-shadow: 0 0 10px rgba(241, 196, 15, 0.6);
+}
+
+#standard-btn {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: #fff;
 }
 
 #setup-btn {

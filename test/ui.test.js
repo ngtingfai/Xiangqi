@@ -189,6 +189,59 @@ describe('vs-human mode switching', () => {
     });
 });
 
+describe('launch options', () => {
+    beforeEach(() => {
+        setBoard(api, [
+            [9, 4, 'king', 'red'],
+            [0, 4, 'king', 'black'],
+            [5, 0, 'chariot', 'red']
+        ]);
+        api.__elements['setup-btn'].className = '';
+        api.__elements['examples-btn'].className = '';
+    });
+
+    it('Standard Game starts a standard position and closes any open launch panel', () => {
+        api.__elements['examples-btn'].click();
+        api.__elements['standard-btn'].click();
+        assert.ok(api.__elements['examples-panel'].className.includes('hidden'));
+        assert.ok(api.__elements['setup-panel'].className.includes('hidden'));
+        assert.ok(!api.__elements['setup-btn'].className.includes('active'));
+        assert.ok(!api.__elements['examples-btn'].className.includes('active'));
+        assert.strictEqual(api.game.board[0][0].type, 'chariot');
+        assert.strictEqual(api.game.board[0][0].color, 'black');
+        assert.strictEqual(api.game.board[9][8].type, 'chariot');
+        assert.strictEqual(api.game.moveHistory.length, 0);
+    });
+
+    it('Bespoke Setup and Endgame Examples are mutually exclusive highlights', () => {
+        api.__elements['examples-btn'].click();
+        assert.ok(api.__elements['examples-btn'].className.includes('active'));
+        api.__elements['setup-btn'].click();
+        assert.strictEqual(api.game.setupMode, true);
+        assert.ok(api.__elements['setup-btn'].className.includes('active'));
+        assert.ok(!api.__elements['examples-btn'].className.includes('active'));
+        assert.ok(api.__elements['examples-panel'].className.includes('hidden'));
+        assert.ok(!api.__elements['setup-panel'].className.includes('hidden'));
+    });
+
+    it('clicking an active launch option again closes it', () => {
+        api.__elements['setup-btn'].click();
+        assert.strictEqual(api.game.setupMode, true);
+        api.__elements['setup-btn'].click();
+        assert.strictEqual(api.game.setupMode, false);
+        assert.ok(api.__elements['setup-panel'].className.includes('hidden'));
+        assert.ok(!api.__elements['setup-btn'].className.includes('active'));
+    });
+
+    it('setup-cancel clears the Bespoke Setup highlight', () => {
+        api.__elements['setup-btn'].click();
+        api.__elements['setup-cancel-btn'].click();
+        assert.strictEqual(api.game.setupMode, false);
+        assert.ok(api.__elements['setup-panel'].className.includes('hidden'));
+        assert.ok(!api.__elements['setup-btn'].className.includes('active'));
+    });
+});
+
 describe('move timing', () => {
     beforeEach(() => {
         setBoard(api, [
