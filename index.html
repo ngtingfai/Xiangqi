@@ -27,7 +27,46 @@
                 <button id="new-game-btn">New Game</button>
                 <button id="undo-btn">Undo Move</button>
                 <button id="flip-board-btn">Flip Board</button>
+            </div>
+            
+            <div id="difficulty">
+                <label>AI Difficulty:</label>
+                <select id="ai-depth">
+                    <option value="1">Easy (Depth 1)</option>
+                    <option value="2" selected>Medium (Depth 2)</option>
+                    <option value="3">Hard (Depth 3)</option>
+                    <option value="4">Expert (Depth 4)</option>
+                </select>
+            </div>
+            
+            <div id="mode-toggle">
+                <button id="vs-ai-btn" class="active">vs Computer</button>
+                <button id="vs-human-btn">vs Human</button>
+            </div>
+            
+            <div id="side-toggle">
+                <button id="switch-sides-btn">Switch Sides (Play as Black)</button>
+            </div>
+        </div>
+        
+        <div id="board-container">
+            <canvas id="board"></canvas>
+            <div id="captured-pieces">
+                <div id="red-captured">
+                    <h4>Red Captured</h4>
+                    <div id="red-captured-list"></div>
+                </div>
+                <div id="black-captured">
+                    <h4>Black Captured</h4>
+                    <div id="black-captured-list"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="notation-panel">
+            <div id="right-actions">
                 <button id="setup-btn">Setup Position</button>
+                <button id="examples-btn">Endgame Examples</button>
             </div>
             
             <div id="setup-panel" class="hidden">
@@ -49,27 +88,8 @@
                 </div>
             </div>
             
-            <div id="difficulty">
-                <label>AI Difficulty:</label>
-                <select id="ai-depth">
-                    <option value="1">Easy (Depth 1)</option>
-                    <option value="2" selected>Medium (Depth 2)</option>
-                    <option value="3">Hard (Depth 3)</option>
-                    <option value="4">Expert (Depth 4)</option>
-                </select>
-            </div>
-            
-            <div id="mode-toggle">
-                <button id="vs-ai-btn" class="active">vs Computer</button>
-                <button id="vs-human-btn">vs Human</button>
-            </div>
-            
-            <div id="side-toggle">
-                <button id="switch-sides-btn">Switch Sides (Play as Black)</button>
-            </div>
-            
-            <div id="endgame-studies">
-                <h3>Endgame Studies</h3>
+            <div id="examples-panel" class="hidden">
+                <h3>Endgame Examples</h3>
                 <div id="study-list">
                     <button class="study-btn" data-study="0">1. Basic Checkmate</button>
                     <button class="study-btn" data-study="1">2. Chariot & Horse</button>
@@ -80,23 +100,7 @@
                 </div>
                 <p id="study-description"></p>
             </div>
-        </div>
-        
-        <div id="board-container">
-            <canvas id="board"></canvas>
-            <div id="captured-pieces">
-                <div id="red-captured">
-                    <h4>Red Captured</h4>
-                    <div id="red-captured-list"></div>
-                </div>
-                <div id="black-captured">
-                    <h4>Black Captured</h4>
-                    <div id="black-captured-list"></div>
-                </div>
-            </div>
-        </div>
-        
-        <div id="notation-panel">
+            
             <h3>Moves</h3>
             <div id="notation-toggle">
                 <button id="notation-btn">Notation: 中文</button>
@@ -139,6 +143,7 @@
     <script src="move.js"></script>
     <script src="ai.js"></script>
     <script src="render.js"></script>
+    <script src="examples/endgame_examples.js"></script>
     <script src="main.js"></script>
 </body>
 </html>

@@ -110,6 +110,39 @@ describe('music toggle', () => {
     });
 });
 
+describe('endgame examples toggle', () => {
+    beforeEach(() => {
+        setBoard(api, [
+            [9, 4, 'king', 'red'],
+            [0, 4, 'king', 'black']
+        ]);
+    });
+
+    it('reveals the panel on click and hides it on a second click', () => {
+        assert.ok(api.__elements['examples-panel'].className.includes('hidden'));
+        api.__elements['examples-btn'].click();
+        assert.ok(!api.__elements['examples-panel'].className.includes('hidden'));
+        api.__elements['examples-btn'].click();
+        assert.ok(api.__elements['examples-panel'].className.includes('hidden'));
+    });
+
+    it('closes the examples panel when setup is opened', () => {
+        api.__elements['examples-btn'].click();
+        api.__elements['setup-btn'].click();
+        assert.ok(api.__elements['examples-panel'].className.includes('hidden'));
+        assert.ok(!api.__elements['setup-panel'].className.includes('hidden'));
+        assert.strictEqual(api.game.setupMode, true);
+    });
+
+    it('exits setup mode when the examples panel is opened', () => {
+        api.__elements['setup-btn'].click();
+        assert.strictEqual(api.game.setupMode, true);
+        api.__elements['examples-btn'].click();
+        assert.strictEqual(api.game.setupMode, false);
+        assert.ok(!api.__elements['examples-panel'].className.includes('hidden'));
+    });
+});
+
 describe('move timing', () => {
     beforeEach(() => {
         setBoard(api, [

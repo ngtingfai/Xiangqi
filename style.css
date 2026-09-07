@@ -110,7 +110,7 @@ body {
     border-radius: 15px;
     padding: 20px;
     color: #fff;
-    max-height: 725px;
+    max-height: 920px;
 }
 
 #notation-panel h3 {
@@ -269,8 +269,36 @@ body {
     color: #fff;
 }
 
+#right-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+#right-actions button {
+    flex: 1;
+    padding: 10px;
+    font-size: 13px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #fff;
+}
+
+#right-actions button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
 #setup-btn {
     background: linear-gradient(135deg, #8e44ad, #6c3483);
+    color: #fff;
+}
+
+#examples-btn {
+    background: linear-gradient(135deg, #16a085, #0e6655);
     color: #fff;
 }
 
@@ -278,7 +306,7 @@ body {
     background: rgba(0, 0, 0, 0.3);
     border-radius: 10px;
     padding: 15px;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
 
 #setup-panel h3 {
@@ -488,13 +516,14 @@ body {
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
-#endgame-studies {
+#examples-panel {
     background: rgba(0,0,0,0.3);
     border-radius: 10px;
     padding: 15px;
+    margin-bottom: 10px;
 }
 
-#endgame-studies h3 {
+#examples-panel h3 {
     color: #f1c40f;
     margin-bottom: 10px;
     text-align: center;

@@ -8,7 +8,7 @@ Open `index.html` in a browser (double-click, or `Start-Process index.html` on W
 **Repo:** https://github.com/ngtingfai/Xiangqi — `main` branch, `gh` CLI authed as `ngtingfai`. Only commit/push when explicitly asked.
 
 ## Overview
-A browser-based Xiangqi (Chinese Chess) game built with vanilla HTML/CSS/JavaScript (no frameworks). Rendered on an HTML5 Canvas. Supports vs AI (minimax with alpha-beta pruning) and vs Human modes, with configurable AI difficulty, board flip, undo, endgame studies, switchable sides, and move history in WXF or traditional Chinese notation (toggleable).
+A browser-based Xiangqi (Chinese Chess) game built with vanilla HTML/CSS/JavaScript (no frameworks). Rendered on an HTML5 Canvas. Supports vs AI (minimax with alpha-beta pruning) and vs Human modes, with configurable AI difficulty, board flip, undo, endgame examples, switchable sides, and move history in WXF or traditional Chinese notation (toggleable).
 
 **Local path:** `C:\Users\user\Desktop\TF\VScode\Xiangqi`
 
@@ -16,33 +16,34 @@ A browser-based Xiangqi (Chinese Chess) game built with vanilla HTML/CSS/JavaScr
 > Line counts are approximate snapshots; test files were split by theme in Session 13.
 | File | Lines | Purpose |
 |------|-------|---------|
-| `index.html` | 144 | Main HTML page with sidebar UI, canvas, notation panel + eval bar, background-music audio, game-over modal, setup-position panel |
-| `style.css` | 659 | Dark-themed UI styling with gradient background |
+| `index.html` | 149 | Main HTML page with sidebar UI, canvas, moves panel + eval bar, collapsible Setup Position / Endgame Examples panels, background-music audio, game-over modal |
+| `style.css` | 688 | Dark-themed UI styling with gradient background |
 | `board.js` | 368 | Board model: constants, piece symbols, `game` state, `initBoard`, geometry/palace/river/flip helpers, position-setup engine functions |
 | `rules.js` | 458 | Movement rules: `getValidMoves`, `getAllLegalMoves` (single-scan king-position cache), `isInCheck` (direct attack detection, optional cached coords), `isKingsFacing` (optional cached coords), WXF chase helpers (`canLegallyCapture`, `isProtectedVictim`, `isExchangeAttack`, `computeMoveStatus`) |
 | `move.js` | 278 | Move engine: `makeMove` (records elapsed time + position hash/status), `undoMove`, `restorePosition`, `checkForCheckmate`, WXF repetition judging (`positionHash`, `judgePlayer`, `judgeGame`, `judgeRepetition`), notation (`toWXFMove`/`toChineseMove`/`formatMove`) |
 | `ai.js` | 346 | AI: `PIECE_VALUES`, `EVAL_RANGE`, `evaluateBoard` (incremental), 64-bit Zobrist keys, equal-depth transposition table, `minimax` (alpha-beta + PVS), `searchRoot`, `orderMoves`/`orderMovesPlies`, `aiMove` |
 | `render.js` | 274 | Rendering + UI: canvas setup, `drawBoard`, `drawPiece`, `getBoardCoords`, `updateUI`, `updateEvalBar`, `formatElapsedTime`, `showGameOver`, music functions |
-| `main.js` | 281 | Wiring: all event listeners, canvas click handler, setup-panel/palette wiring, `ENDGAME_STUDIES`, startup |
-| `test/harness.js` | 133 | Loads the source files in order in a sandboxed VM with DOM stubs |
+| `main.js` | 222 | Wiring: all event listeners, canvas click handler, setup/examples panel toggles, `ENDGAME_EXAMPLES` loading, startup |
+| `examples/endgame_examples.js` | 67 | `ENDGAME_EXAMPLES` — the six endgame example positions (name, description, board setup) |
+| `test/harness.js` | 161 | Loads the source files in order in a sandboxed VM with DOM stubs |
 | `test/game.test.js` | 300 | Core regression tests: setup, geometry, piece movement, check/legal filtering, move exec/undo, end-of-game, evaluation |
 | `test/notation.test.js` | 166 | Notation (`toWXFMove`/`toChineseMove`/`formatMove`, toggle) + `restorePosition` / clickable-move links |
 | `test/repetition.test.js` | 157 | WXF repetition rules: perpetual check/chase losses, threefold idle draw, capture-breaks-cycle, mutual check/chase draws |
 | `test/setup.test.js` | 138 | Position setup: enter/clear/erase, validation, commit, cancel-restore, standard load, exit-on-reset |
-| `test/ui.test.js` | 129 | DOM-coupled UI: evaluation bar, music toggle, move timing |
+| `test/ui.test.js` | 176 | DOM-coupled UI: evaluation bar, music toggle, endgame-examples panel toggle, move timing |
 | `music/Qiu_Feng_Ci.ogg` | — | Background music track (see Background Music section below) |
 | `README.md` | — | This file — project documentation |
 
 ## Tests
 - Run with `node --test` from the repo root. Built-in `node:test` runner, zero dependencies.
-- `test/harness.js` evaluates the six source files (`board.js` → `rules.js` → `move.js` → `ai.js` → `render.js` → `main.js`, concatenated in that order, matching the `index.html` script tags) inside a `vm` context with stubbed `document`/canvas/`ctx`, then exposes the module's functions via a `globalThis.__api` epilogue. An element stub records event listeners so button handlers can be exercised via `.click()`. Every test file calls `loadGame()` itself — each suite gets its own sandboxed copy, so tests never share state.
-- Test files (each discovered by `node --test` automatically): `game.test.js` (core engine), `notation.test.js` (notation + history restore), `repetition.test.js` (WXF draw rules), `setup.test.js` (position editor), `ui.test.js` (eval bar, music, timing).
-- Coverage highlights: standard setup, 44 legal opening moves each, palace/river helpers, board-flip transforms, per-piece move rules, kings-facing filter, check detection, pinned-piece rules, capture/undo, checkmate + stalemate (loss), evaluation values, WXF/Chinese notation incl. 前/後 disambiguation, history restore (`restorePosition` replays ✅, branch truncation, captured-pieces recompute, clickable move links), the evaluation bar (centering, red advantage, capture updates, restore updates, clamping), the music toggle (off-by-default, on/off flipping, board interaction never toggles it), move timing (elapsed recording, clock reset, table rendering), WXF repetition (perpetual check/chase, threefold draw, capture-breaks-cycle, mutual check/chase), and position setup (place/erase, clear, validation failures, facing-kings rejection, commit, cancel-restore, standard load, exit-on-reset).
+- `test/harness.js` evaluates the seven source files (`board.js` → `rules.js` → `move.js` → `ai.js` → `render.js` → `examples/endgame_examples.js` → `main.js`, concatenated in that order, matching the `index.html` script tags) inside a `vm` context with stubbed `document`/canvas/`ctx`, then exposes the module's functions via a `globalThis.__api` epilogue. An element stub records event listeners so button handlers can be exercised via `.click()` (a functional `classList` stub reflects the current `className`, so panels that show/hide via `hidden` work). Every test file calls `loadGame()` itself — each suite gets its own sandboxed copy, so tests never share state.
+- Test files (each discovered by `node --test` automatically): `game.test.js` (core engine), `notation.test.js` (notation + history restore), `repetition.test.js` (WXF draw rules), `setup.test.js` (position editor), `ui.test.js` (eval bar, music, endgame-examples toggle, timing).
+- Coverage highlights: standard setup, 44 legal opening moves each, palace/river helpers, board-flip transforms, per-piece move rules, kings-facing filter, check detection, pinned-piece rules, capture/undo, checkmate + stalemate (loss), evaluation values, WXF/Chinese notation incl. 前/後 disambiguation, history restore (`restorePosition` replays ✅, branch truncation, captured-pieces recompute, clickable move links), the evaluation bar (centering, red advantage, capture updates, restore updates, clamping), the music toggle (off-by-default, on/off flipping, board interaction never toggles it), move timing (elapsed recording, clock reset, table rendering), WXF repetition (perpetual check/chase, threefold draw, capture-breaks-cycle, mutual check/chase), and position setup (place/erase, clear, validation failures, facing-kings rejection, commit, cancel-restore, standard load, exit-on-reset), and the endgame-examples panel (reveal/hide, mutual exclusion with setup).
 - Note: values returned by the sources come from a different JS realm (vm), so tests use `assert.deepEqual` (not `deepStrictEqual`) for objects/arrays.
 
 ## Architecture (client-side, no build step)
 
-The game is split into six plain scripts loaded in dependency order from `index.html`; they share the page's global scope (`const game` lives in `board.js`, so order matters only for load-time code — all cross-file calls happen at runtime).
+The game is split into seven plain files loaded in dependency order from `index.html`; they share the page's global scope (`const game` lives in `board.js`, so order matters only for load-time code — all cross-file calls happen at runtime).
 
 ### File breakdown & dependency order
 1. **`board.js`** — constants (`BOARD_SIZE=9`, `BOARD_HEIGHT=10`, `CELL_SIZE=65`, `MARGIN=40`), piece symbols (`RED_PIECES`/`BLACK_PIECES`), the `game` state object, `aiMoveSequence` guard, `initBoard()`, geometry helpers (`isValidPos`, `isInPalace`, `isAcrossRiver`, `boardToScreen`/`screenToBoard`), and the position-setup engine (`startPositionSetup`, `placeSetupPiece`, `validateSetupPosition`, `commitPositionSetup`, `cancelPositionSetup`, etc.).
@@ -50,7 +51,8 @@ The game is split into six plain scripts loaded in dependency order from `index.
 3. **`move.js`** — move/history engine (`makeMove`, `undoMove`, `restorePosition`, `checkForCheckmate`), WXF repetition judging (`positionHash`, `judgePlayer`, `judgeGame`, `judgeRepetition`), and notation (`toWXFMove`, `getChineseFile`, `getChineseMovePrefix`, `toChineseMove`, `formatMove`).
 4. **`ai.js`** — `PIECE_VALUES`, `EVAL_RANGE`, `evaluateBoard`, `minimax` (alpha-beta), `aiMove`.
 5. **`render.js`** — canvas setup and constants, `drawBoard`, `drawPiece`, `getBoardCoords`, DOM UI (`updateUI`, `updateEvalBar`, `formatElapsedTime`, `showGameOver`, `updateTurnText`), music control (`enableMusic`/`disableMusic`/`toggleMusic`/`updateMusicButton`).
-6. **`main.js`** — the canvas click handler, all button/table listeners (incl. the setup panel), `ENDGAME_STUDIES`, and the startup sequence (`initBoard(); drawBoard(); updateUI(); updateMusicButton(); updateSetupPalette();` plus building the piece palette).
+6. **`examples/endgame_examples.js`** — the `ENDGAME_EXAMPLES` array (name, description, board-setup function for each of the six endgame examples). Loaded before `main.js`, whose study listeners read it.
+7. **`main.js`** — the canvas click handler, all button/table listeners (incl. the Setup Position / Endgame Examples panel toggles), and the startup sequence (`initBoard(); drawBoard(); updateUI(); updateMusicButton(); updateSetupPalette();` plus building the piece palette).
 
 ### Constants & Config
 - Board: 9 columns x 10 rows (`BOARD_SIZE=9`, `BOARD_HEIGHT=10`) — `board.js`
@@ -150,7 +152,8 @@ The game is split into six plain scripts loaded in dependency order from `index.
 | `#vs-ai-btn` | Switches to AI mode, resets humanColor to red, shows side toggle |
 | `#vs-human-btn` | Switches to human mode, hides side toggle |
 | `#switch-sides-btn` | Swaps humanColor, auto-flips board, triggers AI if now playing as Black |
-| `#setup-btn` | Opens the position-setup panel (`startPositionSetup`); while open, **Cancel Setup** closes it (`cancelPositionSetup`) |
+| `#setup-btn` | Toggles the Setup Position panel (revealed above the moves table): starts setup (`startPositionSetup`), or **Cancel Setup** closes it (`cancelPositionSetup`); opening it hides the Endgame Examples panel |
+| `#examples-btn` | Toggles the Endgame Examples panel (revealed/hidden just like Setup Position); opening it exits any active setup mode |
 | `#setup-palette .setup-piece-btn` | Selects a piece to place (`selectSetupPiece(type, color)`) |
 | `#setup-eraser-btn` | Selects erase mode |
 | `#setup-clear-btn` | Empties the setup board (`clearSetupBoard`) |
@@ -158,7 +161,7 @@ The game is split into six plain scripts loaded in dependency order from `index.
 | `#setup-turn-red-btn` / `#setup-turn-black-btn` | Chooses which side moves first after committing |
 | `#setup-start-btn` | Commits the position (`commitPositionSetup`) or shows a validation error in `#setup-message` |
 | `#setup-cancel-btn` | Returns to the pre-setup position (`cancelPositionSetup`) |
-| `.study-btn` | Loads endgame study puzzle, forces humanColor to red; snapshots `initialBoard`, resets history (also exits any active setup mode) |
+| `.study-btn` | Loads an endgame example position, forces humanColor to red; snapshots `initialBoard`, resets history (also exits any active setup mode) |
 | `#game-over-btn` | Restarts game; triggers AI if human is Black |
 
 ### Move Validation per Piece Type (in `rules.js`, `getValidMoves`)
@@ -198,7 +201,7 @@ The game is split into six plain scripts loaded in dependency order from `index.
 - Board grid, river text, and palace diagonals are drawn at fixed visual positions (symmetric, no flip needed)
 - Auto-flips when switching sides to play as Black
 
-### Endgame Studies (6 puzzles, in `main.js`)
+### Endgame Examples (6 puzzles, in `examples/endgame_examples.js`)
 1. **Basic Checkmate** — Chariot + King vs King (flying general trap). Black King (0,3), Red King (9,4), Red Chariot (5,0). Solution: Chariot → (2,3).
 2. **Chariot & Horse Mate** — Coordination pattern
 3. **Cannon Mate** — Cannon with platform piece
@@ -216,14 +219,15 @@ The game is split into six plain scripts loaded in dependency order from `index.
 - **Clickable moves** — clicking any move in the notation table restores the board to that exact position (Red/Black pairs by move number, current position highlighted in gold)
 - **Notation toggle** — button switches the table's format between `中文` (e.g. 炮八平五) and `WXF` (e.g. 俥 0919)
 - **Evaluation bar** — vertical bar to the left of the moves table; red fills from the top proportional to material advantage (positive = ahead for Red, negative = Black). Recomputes after every move **and** whenever a move is clicked to restore a previous position (via `updateUI`). Hover shows the numeric score; full scale ≈ one chariot (`EVAL_RANGE=100`).
-- **Per-move elapsed time** — each move in the notation table shows the actual time the mover spent on it (e.g. `8.4s`, `2:05`), recorded on the move in `makeMove`. The human's clock runs from when their turn starts until they move; the computer's clock runs from when `aiMove` begins thinking until it makes the move. Note: move times apply to real games only — when study **solutions** (preset move sequences) are added later, they will not report actual times.
-- **Setup Position** — sidebar button opens a palette-driven editor: place any of 7 piece types in red or black, erase, clear, load the standard start, pick which side moves first; **Start Game** validates (kings compulsory in-palace, not facing) and commits as a fresh game, **Cancel Setup** restores the previous position/history exactly. New Game, studies, and mode switches auto-exit setup mode.
+- **Per-move elapsed time** — each move in the notation table shows the actual time the mover spent on it (e.g. `8.4s`, `2:05`), recorded on the move in `makeMove`. The human's clock runs from when their turn starts until they move; the computer's clock runs from when `aiMove` begins thinking until it makes the move. Note: move times apply to real games only — when example **solutions** (preset move sequences) are added later, they will not report actual times.
+- **Setup Position** — a collapsible panel above the moves table (right column, next to the Move Table), toggled by the **Setup Position** button. Opens a palette-driven editor: place any of 7 piece types in red or black, erase, clear, load the standard start, pick which side moves first; **Start Game** validates (kings compulsory in-palace, not facing) and commits as a fresh game, **Cancel Setup** restores the previous position/history exactly. New Game, examples, and mode switches auto-exit setup mode.
+- **Endgame Examples** — a collapsible panel above the moves table (right column, next to the Move Table), toggled by the **Endgame Examples** button — exactly like Setup Position. Contains the six example positions in their own folder (`examples/`); opening it while in setup mode exits setup first.
 - **Background music** — lo-fi guqin piece (《秋風詞》) controlled by a single **Music** button: click to start, click again to stop. The button is the only control — playing a move never turns the sound on or off.
 - **History branching** — making a new move from a restored position truncates all later moves
 - **Captured pieces** — displayed below the board for both sides
 - **Game-over modal** — overlay with result and "Play Again" button
 - **Click-to-select, click-to-move** with valid move indicators (yellow circles)
-- **Endgame study** buttons — load preset puzzle positions
+- **Endgame Examples** buttons — load preset puzzle positions from the collapsible panel
 
 ### Background Music
 - `music/Qiu_Feng_Ci.ogg` — 《秋風詞》 *Qiu Feng Ci (Ode of the Autumn Wind)*, guqin, ~1 min 46 s loop.
@@ -231,6 +235,7 @@ The game is split into six plain scripts loaded in dependency order from `index.
 - Played via an `<audio>` element (`#bg-music`, `loop`). Controlled only by the **Music** button (`#music-btn`); the click satisfies the browser's autoplay-policy gesture requirement, and playing a move does not affect the sound.
 
 ## Session History
+- **Session 16**: Cosmetic UI reorganization. Renamed "Endgame Studies" to **Endgame Examples** and moved the six example definitions out of `main.js` into their own folder (`examples/endgame_examples.js` — loaded between `render.js` and `main.js`, both in `index.html` and the test harness). The examples now live in a **collapsible panel** toggled by an **Endgame Examples** button (reveal/hide like Setup Position). Moved both the **Setup Position** and **Endgame Examples** panels out of the sidebar into the right column, next to the Move Table: two toggle buttons sit above the moves, and the two panels are mutually exclusive (opening one closes the other / exits setup). The test harness's `classList` stub is now functional (backed by `className`) so panel visibility can be asserted; `setBoard` resets `setupMode` and the panels' initial `hidden` state. 3 new tests — 69 tests / 15 suites passing.
 - **Session 1**: Initial project creation, pushed to GitHub. Fixed Example 1 endgame study (was unsolvable — no one-move checkmate existed). Fixed AI minimax to use `getAllLegalMoves` instead of `getAllMoves`.
 - **Session 2**: Removed unused `getAllMoves` function. Fixed flip board button (was toggling state but `drawBoard`/`drawPiece`/`getBoardCoords` never used it — added `boardToScreen`/`screenToBoard` helpers). Added Switch Sides feature (`game.humanColor`, color-aware `aiMove`, auto-flip, AI first move trigger).
 - **Session 3**: Added `README.md`; merged `PROJECT.md` documentation into this file.
@@ -251,12 +256,12 @@ The game is split into six plain scripts loaded in dependency order from `index.
 - AI evaluation is material-only, no positional awareness or piece-square tables
 - No WXF 60-move rule (a 120-ply stretch with no capture and no soldier advance is not auto-drawn; repetition rules above do apply)
 - No check/checkmate sound effects or animations
-- Endgame studies only set up position; no "solution" validation
+- Endgame examples only set up position; no "solution" validation
 
 ## Development Notes (for future sessions)
-- **Standard flow at the start of a session:** run `node --test` to confirm the baseline (currently 66 tests / 14 suites), read this README's Session History + Architecture to reload context, and inspect `git status`/`git log --oneline` for where things were left off.
+- **Standard flow at the start of a session:** run `node --test` to confirm the baseline (currently 69 tests / 15 suites), read this README's Session History + Architecture to reload context, and inspect `git status`/`git log --oneline` for where things were left off.
 - **Encoding:** all source files are UTF-8. NEVER use PowerShell `Set-Content`/`Out-File` to write or rewrite `.js`/`.html`/`.css`/`.md` files — it can corrupt UTF-8 (encoding warnings). Use the assistant's file tools (Read/Write/Edit) instead.
-- **Load order / harness:** the six source scripts share global scope; cross-file calls all happen at runtime, so order only matters for load-time code. The test harness concatenates the same order as `index.html` — if you add a script tag to the page you must update `test/harness.js`'s file list too.
+- **Load order / harness:** the seven source files share global scope; cross-file calls all happen at runtime, so order only matters for load-time code. The test harness concatenates the same order as `index.html` (note the bespoke `examples/endgame_examples.js` slot between `render.js` and `main.js`) — if you change the script tags on the page you must update `test/harness.js`'s file list too.
 - **DOM stubs:** harness element stubs (`api.__elements[id]`) only know the IDs listed in `harness.js`. New UI controls must be added to `harness.js` before tests can `.click()` them or read their `textContent`/`style`. Button handlers are recorded via `addEventListener`, and `.click()` fires them.
 - **Test style:** one `loadGame()` per test file (isolated sandbox). `setBoard(api, [[r,c,type,color], ...])` sets a custom position. Use `assert.deepEqual` (not `deepStrictEqual`) because VM-realm objects differ.
 - **Conventions:** `makeMove(r,c,toR,toC)` in tests; `api.__elements['id']` for DOM assertions; new features get regression tests in the matching themed file (or a new `*.test.js`).

@@ -27,9 +27,23 @@ function createElement(id) {
         dataset: {},
         style: {},
         classList: {
-            add() {},
-            remove() {},
-            toggle() {}
+            add(...cls) {
+                cls.forEach((c) => {
+                    if (!el.className.split(/\s+/).includes(c)) el.className = (el.className + ' ' + c).trim();
+                });
+            },
+            remove(...cls) {
+                cls.forEach((c) => {
+                    el.className = el.className.split(/\s+/).filter((x) => x && x !== c).join(' ');
+                });
+            },
+            contains(cls) {
+                return el.className.split(/\s+/).includes(cls);
+            },
+            toggle(cls, force) {
+                const on = force !== undefined ? force : !el.className.split(/\s+/).includes(cls);
+                if (on) el.classList.add(cls); else el.classList.remove(cls);
+            }
         },
         children: [],
         appendChild(child) {
@@ -53,7 +67,7 @@ function createElement(id) {
     return el;
 }
 
-const SOURCE_FILES = ['board.js', 'rules.js', 'move.js', 'ai.js', 'render.js', 'main.js'];
+const SOURCE_FILES = ['board.js', 'rules.js', 'move.js', 'ai.js', 'render.js', 'examples/endgame_examples.js', 'main.js'];
 
 function loadGame() {
     const src = SOURCE_FILES
@@ -117,12 +131,17 @@ function setBoard(api, pieces) {
     api.game.notation = 'chinese';
     api.game.aiThinking = false;
     api.game.historyIndex = -1;
+    api.game.setupMode = false;
     api.game.musicOn = false;
     api.game.moveStartTime = Date.now();
     api.game.initialBoard = api.game.board.map(row => row.slice());
     if (api.__elements['music-btn']) {
         api.__elements['music-btn'].textContent = 'Music: Off';
         api.__elements['music-btn'].className = '';
+    }
+    for (const id of ['setup-panel', 'examples-panel']) {
+        if (!api.__elements[id]) api.__elements[id] = createElement(id);
+        api.__elements[id].className = 'hidden';
     }
 }
 
