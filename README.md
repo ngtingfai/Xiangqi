@@ -12,13 +12,13 @@ Quick snapshot for resuming work — read this plus the Architecture section; sk
 
 - **Files:** 7 load-ordered source files (no build step): `board.js` → `rules.js` → `move.js` → `ai.js` → `render.js` → `examples/endgame_examples.js` → `main.js`. That 7-file list must match `index.html` script tags (see `test/harness.js`).
 - **AI:** minimax with alpha-beta + PVS, an equal-depth transposition table (64-bit Zobrist), and incremental evaluation — verified behavior-identical to the old engine via a 596-position differential harness (0 mismatches). ~1.6–1.7× faster at Expert (depth 4), ≈ parity elsewhere. The `minimax` signature is `(depth, alpha, beta, isMaximizing, evalScore, keyHi, keyLo)` with 4-arg-compatible defaults; `aiMove` does a single `searchRoot` pass to `aiDepth-1`.
-- **UI:** music is toggled only by the Music button (board clicks never touch it). The card to the right of the moves table is **Launch Options** — pick **Standard Game** (fresh game; the sidebar **New Game** button is the quick-reset duplicate), **Bespoke Setup** (the position editor), or **Endgame Examples** (six puzzles in `examples/endgame_examples.js`); the three are mutually exclusive highlights. The **vs Human** button switches modes without resetting the board, so it also works while setting up a position or on a loaded endgame example (one human plays both colors).
+- **UI:** music is toggled only by the Music button (board clicks never touch it). The card to the right of the moves table is **Launch Options** — pick **Standard Game** (fresh game; the sidebar **New Game** button is the quick-reset duplicate), **Bespoke Setup** (the position editor), or **Endgame Examples** (six puzzles in `examples/endgame_examples.js`); the three are mutually exclusive highlights. The sidebar holds four explicit **controller modes** — Human Red vs Computer Black (default), Computer Red vs Human Black, Human Red vs Human Black, and Computer Red vs Computer Black (autoplay). **Mode switches never reset the board**, so they work mid-game, during a setup, or on a loaded endgame example.
 - **Rules:** stalemate = loss; flying-general (kings-facing); WXF repetition judging (perpetual check/chase + threefold draw); no 60-move rule yet.
-- **Tests:** `node --test` → 76 tests / 15 suites. Uses a sandboxed VM harness with DOM stubs (functional `classList`); `setBoard` resets setup/music/panel state.
+- **Tests:** `node --test` → 79 tests / 15 suites. Uses a sandboxed VM harness with DOM stubs (functional `classList`); `setBoard` resets setup/music/panel state.
 - **Dev cautions:** UTF-8 — never write source files with PowerShell `Set-Content`/`Out-File`. Commit/push only when asked.
 
 ## Overview
-A browser-based Xiangqi (Chinese Chess) game built with vanilla HTML/CSS/JavaScript (no frameworks). Rendered on an HTML5 Canvas. Supports vs AI (minimax with alpha-beta pruning) and vs Human modes, with configurable AI difficulty, board flip, undo, endgame examples, switchable sides, and move history in WXF or traditional Chinese notation (toggleable).
+A browser-based Xiangqi (Chinese Chess) game built with vanilla HTML/CSS/JavaScript (no frameworks). Rendered on an HTML5 Canvas. Supports four controller modes (Human vs Computer, Computer vs Human, Human vs Human, Computer vs Computer autoplay) on a configurable AI difficulty, plus board flip, undo, endgame examples, and move history in WXF or traditional Chinese notation (toggleable).
 
 **Local path:** `C:\Users\user\Desktop\TF\VScode\Xiangqi`
 
@@ -26,21 +26,21 @@ A browser-based Xiangqi (Chinese Chess) game built with vanilla HTML/CSS/JavaScr
 > Line counts are approximate snapshots; test files were split by theme in Session 13.
 | File | Lines | Purpose |
 |------|-------|---------|
-| `index.html` | 153 | Main HTML page with sidebar UI, canvas, moves panel + eval bar, a **Launch Options** card (Standard Game / Bespoke Setup / Endgame Examples) to the right of the moves panel, background-music audio, game-over modal |
-| `style.css` | 725 | Dark-themed UI styling with gradient background |
-| `board.js` | 368 | Board model: constants, piece symbols, `game` state, `initBoard`, geometry/palace/river/flip helpers, position-setup engine functions |
-| `rules.js` | 458 | Movement rules: `getValidMoves`, `getAllLegalMoves` (single-scan king-position cache), `isInCheck` (direct attack detection, optional cached coords), `isKingsFacing` (optional cached coords), WXF chase helpers (`canLegallyCapture`, `isProtectedVictim`, `isExchangeAttack`, `computeMoveStatus`) |
+| `index.html` | 151 | Main HTML page with sidebar UI (four controller-mode buttons), canvas, moves panel + eval bar, a **Launch Options** card (Standard Game / Bespoke Setup / Endgame Examples) to the right of the moves panel, background-music audio, game-over modal |
+| `style.css` | 708 | Dark-themed UI styling with gradient background |
+| `board.js` | 372 | Board model: constants, piece symbols, `game` state (incl. `redController`/`blackController` + `isAIControlled`), `initBoard`, geometry/palace/river/flip helpers, position-setup engine functions |
+| `rules.js` | 470 | Movement rules: `getValidMoves`, `getAllLegalMoves` (single-scan king-position cache), `isInCheck` (direct attack detection, optional cached coords), `isKingsFacing` (optional cached coords), WXF chase helpers (`canLegallyCapture`, `isProtectedVictim`, `isExchangeAttack`, `computeMoveStatus`) |
 | `move.js` | 278 | Move engine: `makeMove` (records elapsed time + position hash/status), `undoMove`, `restorePosition`, `checkForCheckmate`, WXF repetition judging (`positionHash`, `judgePlayer`, `judgeGame`, `judgeRepetition`), notation (`toWXFMove`/`toChineseMove`/`formatMove`) |
-| `ai.js` | 346 | AI: `PIECE_VALUES`, `EVAL_RANGE`, `evaluateBoard` (incremental), 64-bit Zobrist keys, equal-depth transposition table, `minimax` (alpha-beta + PVS), `searchRoot`, `orderMoves`/`orderMovesPlies`, `aiMove` |
+| `ai.js` | 350 | AI: `PIECE_VALUES`, `EVAL_RANGE`, `evaluateBoard` (incremental), 64-bit Zobrist keys, equal-depth transposition table, `minimax` (alpha-beta + PVS), `searchRoot`, `orderMoves`/`orderMovesPlies`, `aiMove(color)` (auto-chains for AI-vs-AI) |
 | `render.js` | 274 | Rendering + UI: canvas setup, `drawBoard`, `drawPiece`, `getBoardCoords`, `updateUI`, `updateEvalBar`, `formatElapsedTime`, `showGameOver`, music functions |
 | `main.js` | 254 | Wiring: all event listeners, canvas click handler, Launch Options handlers, `ENDGAME_EXAMPLES` loading, startup |
 | `examples/endgame_examples.js` | 69 | `ENDGAME_EXAMPLES` — the six endgame example positions (name, description, board setup) |
 | `test/harness.js` | 161 | Loads the source files in order in a sandboxed VM with DOM stubs |
 | `test/game.test.js` | 300 | Core regression tests: setup, geometry, piece movement, check/legal filtering, move exec/undo, end-of-game, evaluation |
 | `test/notation.test.js` | 166 | Notation (`toWXFMove`/`toChineseMove`/`formatMove`, toggle) + `restorePosition` / clickable-move links |
-| `test/repetition.test.js` | 157 | WXF repetition rules: perpetual check/chase losses, threefold idle draw, capture-breaks-cycle, mutual check/chase draws |
+| `test/repetition.test.js` | 178 | WXF repetition rules: perpetual check/chase losses, threefold idle draw, capture-breaks-cycle, mutual check/chase draws, protected-victim-is-not-a-chase regression |
 | `test/setup.test.js` | 138 | Position setup: enter/clear/erase, validation, commit, cancel-restore, standard load, exit-on-reset |
-| `test/ui.test.js` | 275 | DOM-coupled UI: evaluation bar, music toggle, endgame-examples panel toggle, vs-human mode switching, launch options, move timing |
+| `test/ui.test.js` | 289 | DOM-coupled UI: evaluation bar, music toggle, endgame-examples panel toggle, controller-mode switching, launch options, move timing |
 | `music/Qiu_Feng_Ci.ogg` | — | Background music track (see Background Music section below) |
 | `README.md` | — | This file — project documentation |
 
@@ -48,7 +48,7 @@ A browser-based Xiangqi (Chinese Chess) game built with vanilla HTML/CSS/JavaScr
 - Run with `node --test` from the repo root. Built-in `node:test` runner, zero dependencies.
 - `test/harness.js` evaluates the seven source files (`board.js` → `rules.js` → `move.js` → `ai.js` → `render.js` → `examples/endgame_examples.js` → `main.js`, concatenated in that order, matching the `index.html` script tags) inside a `vm` context with stubbed `document`/canvas/`ctx`, then exposes the module's functions via a `globalThis.__api` epilogue. An element stub records event listeners so button handlers can be exercised via `.click()` (a functional `classList` stub reflects the current `className`, so panels that show/hide via `hidden` work). Every test file calls `loadGame()` itself — each suite gets its own sandboxed copy, so tests never share state.
 - Test files (each discovered by `node --test` automatically): `game.test.js` (core engine), `notation.test.js` (notation + history restore), `repetition.test.js` (WXF draw rules), `setup.test.js` (position editor), `ui.test.js` (eval bar, music, endgame-examples toggle, timing).
-- Coverage highlights: standard setup, 44 legal opening moves each, palace/river helpers, board-flip transforms, per-piece move rules, kings-facing filter, check detection, pinned-piece rules, capture/undo, checkmate + stalemate (loss), evaluation values, WXF/Chinese notation incl. 前/後 disambiguation, history restore (`restorePosition` replays ✅, branch truncation, captured-pieces recompute, clickable move links), the evaluation bar (centering, red advantage, capture updates, restore updates, clamping), the music toggle (off-by-default, on/off flipping, board interaction never toggles it), move timing (elapsed recording, clock reset, table rendering), WXF repetition (perpetual check/chase, threefold draw, capture-breaks-cycle, mutual check/chase), and position setup (place/erase, clear, validation failures, facing-kings rejection, commit, cancel-restore, standard load, exit-on-reset), and the endgame-examples panel (reveal/hide, mutual exclusion with setup), and the launch options (Standard Game resets and clears panels, Bespoke Setup / Endgame Examples mutual-exclusion highlights, re-click toggles off, setup-cancel clears the highlight).
+- Coverage highlights: standard setup, 44 legal opening moves each, palace/river helpers, board-flip transforms, per-piece move rules, kings-facing filter, check detection, pinned-piece rules, capture/undo, checkmate + stalemate (loss), evaluation values, WXF/Chinese notation incl. 前/後 disambiguation, history restore (`restorePosition` replays ✅, branch truncation, captured-pieces recompute, clickable move links), the evaluation bar (centering, red advantage, capture updates, restore updates, clamping), the music toggle (off-by-default, on/off flipping, board interaction never toggles it), move timing (elapsed recording, clock reset, table rendering), WXF repetition (perpetual check/chase, threefold draw, capture-breaks-cycle, mutual check/chase), and position setup (place/erase, clear, validation failures, facing-kings rejection, commit, cancel-restore, standard load, exit-on-reset), and the endgame-examples panel (reveal/hide, mutual exclusion with setup), and the launch options (Standard Game resets and clears panels, Bespoke Setup / Endgame Examples mutual-exclusion highlights, re-click toggles off, setup-cancel clears the highlight), and the four controller modes (default Human Red vs Computer Black, Human-vs-Human clears both sides without resetting the position, Computer-Red flips for Black, Computer-vs-Computer sets both to AI, mode switch preserves an in-progress setup).
 - Note: values returned by the sources come from a different JS realm (vm), so tests use `assert.deepEqual` (not `deepStrictEqual`) for objects/arrays.
 
 ## Architecture (client-side, no build step)
@@ -81,8 +81,8 @@ The game is split into seven plain files loaded in dependency order from `index.
 - `initialBoard` — snapshot of the start position, the base for `restorePosition` replays
 - `historyIndex` — index of the currently displayed position in `moveHistory`; `-1` = initial position; `makeMove` truncates later history when branching from a restored position
 - `isFlipped` — boolean, board display orientation
-- `vsAI` — boolean, default `true`
-- `humanColor` — `'red'` or `'black'`, which color the human plays
+- `redController` — `'human'` or `'ai'`, who controls Red (default `'human'`)
+- `blackController` — `'human'` or `'ai'`, who controls Black (default `'ai'`); helper `isAIControlled(color)` answers "is this side played by the computer?"
 - `aiDepth` — 1/2/3/4, default `2`
 - `aiThinking` — boolean, prevents input during AI computation
 - `gameOver` — boolean
@@ -126,7 +126,7 @@ The game is split into seven plain files loaded in dependency order from `index.
 | `evaluateBoard()` | ai.js | Material evaluation for AI (soldiers worth more after crossing river); used once for the root, with per-move deltas (`pieceValue`/`evalDelta`) threaded through the search |
 | `minimax()` | ai.js | Alpha-beta search with PVS (principal-variation null-window) and an equal-depth transposition table (64-bit Zobrist); threads `evalScore` and the board hash-key through recursion |
 | `searchRoot(moves, depth, color, isMaximizing, rootEval, rootKeyHi, rootKeyLo)` | ai.js | Searches each root move at full window and returns the best 4-digit move |
-| `aiMove()` | ai.js | AI entry point — color-aware, orders root moves (MVV-LVA), does a single `searchRoot` pass to `aiDepth-1` |
+| `aiMove(color)` | ai.js | AI entry point — color-aware (`color` = the AI side to move), orders root moves (MVV-LVA), does a single `searchRoot` pass to `aiDepth-1`, then chains to the other side if it is also AI-controlled |
 | `drawBoard()` | render.js | Renders board grid, river text, palace lines, pieces, selection, valid moves |
 | `drawPiece()` | render.js | Renders a single piece with circle, border, Chinese character (uses `boardToScreen`) |
 | `getBoardCoords()` | render.js | Converts click event to board coordinates (uses `screenToBoard`) |
@@ -151,17 +151,18 @@ The game is split into seven plain files loaded in dependency order from `index.
 ### Event Listeners (all in `main.js`)
 | Element | Action |
 |---------|--------|
-| `#board` (canvas click) | Select/move pieces; triggers `aiMove` after the human move in vs-AI mode; in setup mode, places/erases the selected piece and redraws |
-| `#new-game-btn` | Quick-reset duplicate of **Launch Options → Standard Game**: resets board (also closes open launch panels/exits setup); triggers AI if human is Black |
-| `#undo-btn` | Undoes 2 moves in AI mode (AI+human pair), 1 in human mode (disabled during setup) |
+| `#board` (canvas click) | Select/move pieces; after a move, triggers `aiMove` if the side to move is AI-controlled; in setup mode, places/erases the selected piece and redraws |
+| `#new-game-btn` | Quick-reset duplicate of **Launch Options → Standard Game**: resets board (also closes open launch panels/exits setup); triggers AI if the side to move is AI |
+| `#undo-btn` | Undoes 2 moves when any side is AI-controlled (AI+human pair, or two AI plies), 1 move in pure-human mode (disabled during setup) |
 | `#notation-table` | Clicking a move link restores that position (`restorePosition`) |
 | `#flip-board-btn` | Toggles `game.isFlipped` and redraws |
 | `#music-btn` | Toggles background music on/off |
 | `#notation-btn` | Toggles move notation between 中文 and WXF, re-renders the table |
 | `#ai-depth` | Changes AI search depth |
-| `#vs-ai-btn` | Switches to AI mode, resets humanColor to red, shows the side toggle; starts a fresh standard game |
-| `#vs-human-btn` | Switches to human mode (both colors human), hides the side toggle; **does not reset the board**, so it also works mid-Setup-Position and on a loaded Endgame Example |
-| `#switch-sides-btn` | Swaps humanColor, auto-flips board, triggers AI if now playing as Black |
+| `#mode-hr-cb` | Controller mode **Human Red vs Computer Black** (default): `redController='human'`, `blackController='ai'`; cancels any pending AI move and, if the side to move is AI, moves it |
+| `#mode-cr-hb` | Controller mode **Computer Red vs Human Black**: `redController='ai'`, `blackController='human'`; auto-flips the board so Black's pieces sit at the bottom |
+| `#mode-hr-hb` | Controller mode **Human Red vs Human Black**: both controllers `'human'` (one or two people) |
+| `#mode-cr-cb` | Controller mode **Computer Red vs Computer Black**: both controllers `'ai'` (autoplay — `aiMove` chains until the game ends) |
 | `#standard-btn` | Launch option: fresh standard game (`initBoard`), closes both launch panels and clears their highlights |
 | `#setup-btn` | Launch option **Bespoke Setup**: starts the position editor (`startPositionSetup`), highlights itself, hides Endgame Examples; a second click or **Cancel Setup** closes it (`cancelPositionSetup`) |
 | `#examples-btn` | Launch option **Endgame Examples**: reveals the study list, highlights itself, hides Bespoke Setup; a second click hides it. Opening it exits any active setup mode |
@@ -172,8 +173,8 @@ The game is split into seven plain files loaded in dependency order from `index.
 | `#setup-turn-red-btn` / `#setup-turn-black-btn` | Chooses which side moves first after committing |
 | `#setup-start-btn` | Commits the position (`commitPositionSetup`) or shows a validation error in `#setup-message` |
 | `#setup-cancel-btn` | Returns to the pre-setup position (`cancelPositionSetup`) |
-| `.study-btn` | Loads an endgame example position, forces humanColor to red; snapshots `initialBoard`, resets history (also exits any active setup mode) |
-| `#game-over-btn` | Restarts game; triggers AI if human is Black |
+| `.study-btn` | Loads an endgame example position; snapshots `initialBoard`, resets history (also exits any active setup mode); if the side to move is AI-controlled, moves it |
+| `#game-over-btn` | Restarts the game; triggers AI if the side to move is AI |
 
 ### Move Validation per Piece Type (in `rules.js`, `getValidMoves`)
 - **King**: 1 step orthogonally, must stay in palace (rows 0-2 cols 3-5 for black, rows 7-9 cols 3-5 for red)
@@ -197,9 +198,7 @@ The game is split into seven plain files loaded in dependency order from `index.
 - **Move ordering** — MVV-LVA at the root (most valuable victim, cheapest attacker), and captures → transposition-table move → quiet moves inside the search (`orderMovesPlies`); maximizes alpha-beta cutoffs **without changing the outcome**
 - **Fast check / kings-facing** — `isInCheck` tests attacks directly (rays, cannon screens, horse legs, soldiers, king steps) and `getAllLegalMoves` caches both king positions in one board scan, passing coordinates to `isInCheck`/`isKingsFacing`; identical results, faster
 - Depth configurable 1-4 (default 2)
-- Color-aware: adjusts maximizing/minimizing direction based on `game.humanColor`
-  - If AI is black (human is red): AI minimizes, opponent maximizes
-  - If AI is red (human is black): AI maximizes, opponent minimizes
+- Color-aware: `aiMove(color)` maximizes for Red, minimizes for Black (identified by `game.currentTurn` at call time, not a fixed human color) — so any side can be AI-controlled
 - Uses `getAllLegalMoves` for correct stalemate/checkmate detection
 - Terminal states: no legal moves = -100000 or +100000 (fail-soft values)
 - Evaluation: material count only (no positional tables)
@@ -221,19 +220,18 @@ The game is split into seven plain files loaded in dependency order from `index.
 6. **Chariot Mate** — Chariot with advisor block
 
 ### UI Features
-- **vs Computer / vs Human** mode toggle
-- **Switch Sides** button (visible in AI mode) — swaps human/AI colors, auto-flips board, AI opens if Red
+- **Four explicit controller modes** — **Human Red vs Computer Black** (default), **Computer Red vs Human Black**, **Human Red vs Human Black**, and **Computer Red vs Computer Black** (autoplay: `aiMove` chains side to side until the game ends). Switching modes NEVER resets the board, so it works mid-game, during a setup, or on a loaded endgame example
+- **Board flip** — manual Flip Board button plus auto-flip when the human takes Black
 - **AI Difficulty** dropdown (Easy/Medium/Hard/Expert = depth 1/2/3/4)
 - **Undo move** — undoes 2 moves in AI mode (AI+human pair), 1 in human mode
-- **Flip board** — mirrors the board display via coordinate transformation
 - **Notation table** — its own panel to the right of the board; a scrollable table with move number, Red and Black columns
 - **Clickable moves** — clicking any move in the notation table restores the board to that exact position (Red/Black pairs by move number, current position highlighted in gold)
 - **Notation toggle** — button switches the table's format between `中文` (e.g. 炮八平五) and `WXF` (e.g. 俥 0919)
 - **Evaluation bar** — vertical bar to the left of the moves table; red fills from the top proportional to material advantage (positive = ahead for Red, negative = Black). Recomputes after every move **and** whenever a move is clicked to restore a previous position (via `updateUI`). Hover shows the numeric score; full scale ≈ one chariot (`EVAL_RANGE=100`).
 - **Per-move elapsed time** — each move in the notation table shows the actual time the mover spent on it (e.g. `8.4s`, `2:05`), recorded on the move in `makeMove`. The human's clock runs from when their turn starts until they move; the computer's clock runs from when `aiMove` begins thinking until it makes the move. Note: move times apply to real games only — when example **solutions** (preset move sequences) are added later, they will not report actual times.
 - **Launch Options** — the card to the right of the Move Table groups every "start a position" choice under one **Launch Options** header: **Standard Game** (fresh standard game), **Bespoke Setup** (position editor), and **Endgame Examples** (puzzle list). The three are mutually exclusive highlights; opening one closes the others and Standard Game/New Game clears any highlight. The sidebar **New Game** button is a quick-reset duplicate of Standard Game.
-- **Bespoke Setup** — the launch option that opens the palette-driven editor: place any of 7 piece types in red or black, erase, clear, load the standard start, pick which side moves first; **Start Game** validates (kings compulsory in-palace, not facing) and commits as a fresh game, **Cancel Setup** restores the previous position/history exactly. New Game and Standard Game exit setup mode. The **vs Human** button does NOT auto-exit setup — it just keeps the board in both-human mode, so a custom setup can be played by one person on both sides.
-- **Endgame Examples** — the launch option that reveals the six example positions in their own folder (`examples/`), toggled like Bespoke Setup. Loading an example keeps the current mode, so in vs-Human mode one person plays both sides of the puzzle; in vs-Computer mode the human plays Red and the AI takes Black.
+- **Bespoke Setup** — the launch option that opens the palette-driven editor: place any of 7 piece types in red or black, erase, clear, load the standard start, pick which side moves first; **Start Game** validates (kings compulsory in-palace, not facing) and commits as a fresh game, **Cancel Setup** restores the previous position/history exactly. New Game and Standard Game exit setup mode.
+- **Endgame Examples** — the launch option that reveals the six example positions in their own folder (`examples/`), toggled like Bespoke Setup. Loading an example keeps the current controller mode: in Human-vs-Human one person plays both sides of the puzzle; in Human Red vs Computer Black the human solves it as Red; in Computer Red vs Human Black the AI plays Red; and in Computer-vs-Computer the AI plays both sides (a "solve the puzzle" demo).
 - **Background music** — lo-fi guqin piece (《秋風詞》) controlled by a single **Music** button: click to start, click again to stop. The button is the only control — playing a move never turns the sound on or off.
 - **History branching** — making a new move from a restored position truncates all later moves
 - **Captured pieces** — displayed below the board for both sides
@@ -268,6 +266,8 @@ Recent sessions (14-16) describe the current design in detail; older entries are
 - **Session 18**: Made **vs Human** usable in Setup Position and Endgame Examples. The `#vs-human-btn` handler no longer calls `initBoard()` — switching to human mode now only toggles `game.vsAI`, the active button, and side-toggle visibility, keeping whatever position is on the board (a standard game in progress, an in-progress setup, or a loaded endgame example). The AI-mode button still starts a fresh standard game. Also fixed the Setup palette overflowing: piece glyphs were spilling out of the ~22px circular buttons, so `.setup-piece-btn` glyphs are now `14px` (was 16px) and flex-centered. 3 new UI tests — 72 tests / 15 suites passing.
 - **Session 19**: Fixed Endgame Example 4 (Double Cannon) — it started with Black already in check (Red's rear Cannon on the king's file checked through the front Cannon, so it wasn't a useful "mate in one"). Rebuilt it as a mate-in-one: Black advisors block both side escapes, Red's first move slides a Cannon onto the king's file so the rear Cannon checks through it. Verified with the engine (start: not check; after `2,5 → 2,4`: checkmate). 72 tests / 15 suites passing.
 - **Session 20**: Unified all "start a position" actions into a single **Launch Options** card to the right of the Move Table: **Standard Game**, **Bespoke Setup** (renamed from "Setup Position"), and **Endgame Examples** now sit under one header as three mutually-exclusive, highlightable options (the active option gets a gold border like the mode toggle). Standard Game and the sidebar **New Game**/Play Again close any open launch panel and clear highlights; re-clicking an open option (or Setup's **Cancel**) closes it and clears its highlight; loading a study keeps the Endgame Examples option lit. `#right-actions` CSS replaced by `#launch-options`. 4 new tests — 76 tests / 15 suites passing.
+- **Session 21**: Replaced the "vs Computer / vs Human + Switch Sides" controls with **four explicit controller modes**: **Human Red vs Computer Black** (default), **Computer Red vs Human Black**, **Human Red vs Human Black**, and **Computer Red vs Computer Black** (autoplay). `game.vsAI`/`game.humanColor` were replaced by `game.redController`/`game.blackController` (`'human'`/`'ai'`) plus helper `isAIControlled(color)`; `aiMove()` became `aiMove(color)` and **chains** — after an AI ply, if the side to move is also AI-controlled it schedules the next move (AI-vs-AI autoplay). The `switch-sides-btn`/`side-toggle` were removed (mode buttons now pick the human side directly and auto-flip when the human is Black; the Flip Board button is unchanged). **Mode switches never reset the board** — cancelling pending AI moves instead — so toggling modes mid-example/setup/game no longer restores the Standard Game. 2 new tests — 78 tests / 15 suites passing.
+- **Session 22**: Fixed a repetition-judging bug that made a **protected** victim count as a chase. `isProtectedVictim` tested "can a defender recapture on the victim's square" while the victim still stood there — and `canLegallyCapture` rejects a same-color target — so it always returned false (dead code) and **every** legal capture threat was treated as a 捉 (chase). Demonstrated by an AI-vs-AI depth-3 standard game: Black's cannon threatened Red's advisor by jumping over Red's own king as the screen; the advisor was defended (recapture available), so it was an exchange threat, not a chase — but the old code ruled "Perpetual Chase — Red Wins". Fixed by simulating the capture (attacker temporarily parked on the victim's square, at `ar,ac`) so a defender's recapture is a normal enemy-piece capture. The offending game now correctly rules an idle threefold repetition **draw**. 1 new regression test — 79 tests / 15 suites passing.
 
 ## Known Issues / TODO Ideas
 - AI evaluation is material-only, no positional awareness or piece-square tables
@@ -276,7 +276,7 @@ Recent sessions (14-16) describe the current design in detail; older entries are
 - Endgame examples only set up position; no "solution" validation
 
 ## Development Notes (for future sessions)
-- **Standard flow at the start of a session:** run `node --test` to confirm the baseline (currently 76 tests / 15 suites), read the README's **Current State** (top, fastest resume) + Architecture to reload context, and inspect `git status`/`git log --oneline` for where things were left off.
+- **Standard flow at the start of a session:** run `node --test` to confirm the baseline (currently 79 tests / 15 suites), read the README's **Current State** (top, fastest resume) + Architecture to reload context, and inspect `git status`/`git log --oneline` for where things were left off.
 - **Encoding:** all source files are UTF-8. NEVER use PowerShell `Set-Content`/`Out-File` to write or rewrite `.js`/`.html`/`.css`/`.md` files — it can corrupt UTF-8 (encoding warnings). Use the assistant's file tools (Read/Write/Edit) instead.
 - **Load order / harness:** the seven source files share global scope; cross-file calls all happen at runtime, so order only matters for load-time code. The test harness concatenates the same order as `index.html` (note the bespoke `examples/endgame_examples.js` slot between `render.js` and `main.js`) — if you change the script tags on the page you must update `test/harness.js`'s file list too.
 - **DOM stubs:** harness element stubs (`api.__elements[id]`) only know the IDs listed in `harness.js`. New UI controls must be added to `harness.js` before tests can `.click()` them or read their `textContent`/`style`. Button handlers are recorded via `addEventListener`, and `.click()` fires them.

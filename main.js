@@ -9,7 +9,7 @@ canvas.addEventListener('click', (e) => {
     }
     
     if (game.gameOver || game.aiThinking) return;
-    if (game.vsAI && game.currentTurn !== game.humanColor) return;
+    if (isAIControlled(game.currentTurn)) return;
     
     const [row, col] = coords;
     const piece = game.board[row][col];
@@ -26,8 +26,8 @@ canvas.addEventListener('click', (e) => {
             updateUI();
             checkForCheckmate();
             
-            if (game.vsAI && !game.gameOver && game.currentTurn !== game.humanColor) {
-                aiMove();
+            if (!game.gameOver && isAIControlled(game.currentTurn)) {
+                aiMove(game.currentTurn);
             }
             return;
         }
@@ -54,14 +54,15 @@ document.getElementById('new-game-btn').addEventListener('click', () => {
     initBoard();
     drawBoard();
     updateUI();
-    if (game.vsAI && game.humanColor === 'black') {
-        aiMove();
+    if (isAIControlled(game.currentTurn)) {
+        aiMove(game.currentTurn);
     }
 });
 
 document.getElementById('undo-btn').addEventListener('click', () => {
     if (game.setupMode) return;
-    if (game.vsAI && game.moveHistory.length >= 2) {
+    const anyAI = isAIControlled('red') || isAIControlled('black');
+    if (anyAI && game.moveHistory.length >= 2) {
         undoMove();
         undoMove();
     } else {
@@ -98,8 +99,8 @@ document.getElementById('standard-btn').addEventListener('click', () => {
     initBoard();
     drawBoard();
     updateUI();
-    if (game.vsAI && game.humanColor === 'black') {
-        aiMove();
+    if (isAIControlled(game.currentTurn)) {
+        aiMove(game.currentTurn);
     }
 });
 
@@ -170,39 +171,37 @@ document.getElementById('ai-depth').addEventListener('change', (e) => {
     game.aiDepth = parseInt(e.target.value);
 });
 
-document.getElementById('vs-ai-btn').addEventListener('click', () => {
-    game.vsAI = true;
-    game.humanColor = 'red';
-    document.getElementById('vs-ai-btn').classList.add('active');
-    document.getElementById('vs-human-btn').classList.remove('active');
-    document.getElementById('side-toggle').classList.remove('hidden');
-    document.getElementById('switch-sides-btn').textContent = 'Switch Sides (Play as Black)';
-    resetLaunchOptions();
-    initBoard();
-    drawBoard();
-    updateUI();
-});
+const MODE_CONFIGS = {
+    'mode-hr-cb': ['human', 'ai'],
+    'mode-cr-hb': ['ai', 'human'],
+    'mode-hr-hb': ['human', 'human'],
+    'mode-cr-cb': ['ai', 'ai']
+};
 
-document.getElementById('vs-human-btn').addEventListener('click', () => {
-    game.vsAI = false;
-    document.getElementById('vs-human-btn').classList.add('active');
-    document.getElementById('vs-ai-btn').classList.remove('active');
-    document.getElementById('side-toggle').classList.add('hidden');
-    updateUI();
-});
-
-document.getElementById('switch-sides-btn').addEventListener('click', () => {
-    game.humanColor = game.humanColor === 'red' ? 'black' : 'red';
-    game.isFlipped = game.humanColor === 'black';
-    const btn = document.getElementById('switch-sides-btn');
-    btn.textContent = game.humanColor === 'red' ? 'Switch Sides (Play as Black)' : 'Switch Sides (Play as Red)';
-    resetLaunchOptions();
-    initBoard();
-    drawBoard();
-    updateUI();
-    if (game.humanColor === 'black') {
-        aiMove();
+function setModeState(redCtl, blackCtl, changed) {
+    game.redController = redCtl;
+    game.blackController = blackCtl;
+    for (const id of Object.keys(MODE_CONFIGS)) {
+        const [r, b] = MODE_CONFIGS[id];
+        document.getElementById(id).classList.toggle('active', r === redCtl && b === blackCtl);
     }
+    if (changed) {
+        game.isFlipped = (redCtl === 'ai' && blackCtl === 'human');
+    }
+}
+
+Object.keys(MODE_CONFIGS).forEach(id => {
+    document.getElementById(id).addEventListener('click', () => {
+        const [r, b] = MODE_CONFIGS[id];
+        const changed = game.redController !== r || game.blackController !== b;
+        setModeState(r, b, changed);
+        aiMoveSequence++;
+        if (!game.setupMode && !game.gameOver && isAIControlled(game.currentTurn)) {
+            aiMove(game.currentTurn);
+        }
+        drawBoard();
+        updateUI();
+    });
 });
 
 document.querySelectorAll('.study-btn').forEach(btn => {
@@ -218,7 +217,6 @@ document.querySelectorAll('.study-btn').forEach(btn => {
         study.setup(game.board);
         
         game.currentTurn = 'red';
-        game.humanColor = 'red';
         game.selectedPiece = null;
         game.moveHistory = [];
         game.capturedPieces = { red: [], black: [] };
@@ -228,12 +226,14 @@ document.querySelectorAll('.study-btn').forEach(btn => {
         game.initialBoard = game.board.map(row => row.slice());
         aiMoveSequence++;
         document.getElementById('game-over-overlay').classList.add('hidden');
-        document.getElementById('switch-sides-btn').textContent = 'Switch Sides (Play as Black)';
         
         document.getElementById('study-description').textContent = study.description;
         
         drawBoard();
         updateUI();
+        if (!game.gameOver && isAIControlled(game.currentTurn)) {
+            aiMove(game.currentTurn);
+        }
     });
 });
 
@@ -242,8 +242,8 @@ document.getElementById('game-over-btn').addEventListener('click', () => {
     initBoard();
     drawBoard();
     updateUI();
-    if (game.vsAI && game.humanColor === 'black') {
-        aiMove();
+    if (isAIControlled(game.currentTurn)) {
+        aiMove(game.currentTurn);
     }
 });
 

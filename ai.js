@@ -307,10 +307,10 @@ function searchRoot(rootMoves, depth, aiColor, aiIsMaximizing, rootEval, rootKey
     return { move: bestMove, score: bestScore };
 }
 
-function aiMove() {
+function aiMove(color) {
     if (game.aiThinking || game.gameOver) return;
     
-    const aiColor = game.humanColor === 'red' ? 'black' : 'red';
+    const aiColor = color || game.currentTurn;
     const aiIsMaximizing = aiColor === 'red';
     
     game.aiThinking = true;
@@ -342,5 +342,9 @@ function aiMove() {
         drawBoard();
         updateUI();
         checkForCheckmate();
+        
+        if (!game.gameOver && isAIControlled(game.currentTurn)) {
+            aiMove(game.currentTurn);
+        }
     }, 100);
 }

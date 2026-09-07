@@ -42,8 +42,8 @@ const game = {
     moveHistory: [],
     capturedPieces: { red: [], black: [] },
     isFlipped: false,
-    vsAI: true,
-    humanColor: 'red',
+    redController: 'human',
+    blackController: 'ai',
     aiDepth: 2,
     aiThinking: false,
     gameOver: false,
@@ -75,6 +75,10 @@ const VIOLATION_CHECK = 2;
 const REPETITION_TIMES = 3;
 
 let aiMoveSequence = 0;
+
+function isAIControlled(color) {
+    return color === 'red' ? game.redController === 'ai' : game.blackController === 'ai';
+}
 
 function initBoard() {
     game.board = Array(BOARD_HEIGHT).fill(null).map(() => Array(BOARD_SIZE).fill(null));
@@ -287,8 +291,8 @@ function commitPositionSetup() {
     drawBoard();
     updateUI();
     checkForCheckmate();
-    if (game.vsAI && !game.gameOver && game.currentTurn !== game.humanColor) {
-        aiMove();
+    if (!game.gameOver && isAIControlled(game.currentTurn)) {
+        aiMove(game.currentTurn);
     }
     return true;
 }

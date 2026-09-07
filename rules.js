@@ -282,16 +282,28 @@ function canLegallyCapture(color, fr, fc, tr, tc) {
     return ok;
 }
 
-function isProtectedVictim(attacker, victim, vr, vc) {
+function isProtectedVictim(attacker, victim, ar, ac, vr, vc) {
     if (PIECE_VALUES[victim.type] > PIECE_VALUES[attacker.type]) return false;
+    // Simulate the capture having happened (the attacker now stands on the
+    // victim's square), so a defender's recapture is a normal enemy-piece
+    // capture that canLegallyCapture can verify.
+    game.board[vr][vc] = attacker;
+    game.board[ar][ac] = null;
+    let protectedPiece = false;
     for (let r = 0; r < BOARD_HEIGHT; r++) {
         for (let c = 0; c < BOARD_SIZE; c++) {
             const defender = game.board[r][c];
             if (!defender || defender.color !== victim.color || defender === victim) continue;
-            if (canLegallyCapture(victim.color, r, c, vr, vc)) return true;
+            if (canLegallyCapture(victim.color, r, c, vr, vc)) {
+                protectedPiece = true;
+                break;
+            }
         }
+        if (protectedPiece) break;
     }
-    return false;
+    game.board[ar][ac] = attacker;
+    game.board[vr][vc] = victim;
+    return protectedPiece;
 }
 
 function isExchangeAttack(attacker, victim, ar, ac, vr, vc) {
@@ -325,7 +337,7 @@ function computeMoveStatus(move) {
                     if (!attacker || attacker.color !== mover || attacker === victim) continue;
                     if (!canLegallyCapture(mover, ar, ac, r, c)) continue;
                     if (isExchangeAttack(attacker, victim, ar, ac, r, c)) continue;
-                    if (isProtectedVictim(attacker, victim, r, c)) continue;
+                    if (isProtectedVictim(attacker, victim, ar, ac, r, c)) continue;
                     victims.push(r + ',' + c);
                     break;
                 }

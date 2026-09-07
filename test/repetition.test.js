@@ -113,6 +113,27 @@ describe('repetition rules', () => {
         assert.strictEqual(api.game.moveHistory[0].hash.includes('.'), true);
     });
 
+    it('an attack on a protected victim is not a chase (regression)', () => {
+        // Black cannon (9,0) could capture red advisor (9,5) using red's own
+        // king (9,4) as the jumping screen — a real threat, but the advisor is
+        // defended (red advisor 8,4 can recapture), so it must NOT be a chase.
+        setBoard(api, [
+            [9, 4, 'king', 'red'],
+            [8, 4, 'advisor', 'red'],
+            [9, 5, 'advisor', 'red'],
+            [0, 3, 'king', 'black'],
+            [9, 0, 'cannon', 'black']
+        ]);
+        api.game.currentTurn = 'black';
+
+        api.makeMove(0, 3, 1, 3);
+        api.checkForCheckmate();
+        assert.strictEqual(api.game.gameOver, false);
+        assert.strictEqual(api.game.moveHistory[0].status, api.POSITION_IDLE,
+            'a defended victim (recapture possible) must not count as a chase');
+        assert.strictEqual(api.game.moveHistory[0].chased.length, 0);
+    });
+
     it('mutual perpetual check (equal levels) is ruled a draw', () => {
         setBoard(api, []);
         for (let i = 0; i < 12; i++) {

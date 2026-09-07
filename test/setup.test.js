@@ -77,7 +77,6 @@ describe('position setup', () => {
 
     it('commits a valid setup position as a fresh game', () => {
         setBoard(api, []);
-        api.game.vsAI = false;
         validPosition();
         api.selectSetupPiece('chariot', 'red');
         api.placeSetupPiece(5, 0);

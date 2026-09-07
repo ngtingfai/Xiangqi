@@ -500,19 +500,25 @@ body {
 
 #mode-toggle {
     display: flex;
-    gap: 10px;
+    flex-direction: column;
+    gap: 8px;
     margin-bottom: 15px;
 }
 
 #mode-toggle button {
-    flex: 1;
     padding: 10px;
+    font-size: 13px;
     border: 2px solid #555;
     background: transparent;
     color: #fff;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s;
+}
+
+#mode-toggle button:hover {
+    background: rgba(255,255,255,0.1);
+    transform: translateY(-1px);
 }
 
 #mode-toggle button.active {
@@ -522,29 +528,6 @@ body {
 
 .hidden {
     display: none !important;
-}
-
-#side-toggle {
-    margin-bottom: 15px;
-}
-
-#side-toggle button {
-    width: 100%;
-    padding: 10px;
-    font-size: 14px;
-    font-weight: bold;
-    border: 2px solid #8e44ad;
-    background: transparent;
-    color: #fff;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-#side-toggle button:hover {
-    background: #8e44ad;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
 #examples-panel {

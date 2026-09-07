@@ -143,49 +143,63 @@ describe('endgame examples toggle', () => {
     });
 });
 
-describe('vs-human mode switching', () => {
+describe('mode switching', () => {
     beforeEach(() => {
         setBoard(api, [
             [9, 4, 'king', 'red'],
             [0, 4, 'king', 'black'],
             [5, 0, 'chariot', 'red']
         ]);
-        api.game.vsAI = true;
+        api.game.redController = 'human';
+        api.game.blackController = 'ai';
+        api.__elements['mode-hr-cb'].className = 'active';
+        api.__elements['mode-cr-hb'].className = '';
+        api.__elements['mode-hr-hb'].className = '';
+        api.__elements['mode-cr-cb'].className = '';
     });
 
-    it('switches to vs-human without resetting the current position', () => {
-        api.__elements['vs-human-btn'].click();
-        assert.strictEqual(api.game.vsAI, false);
+    it('starts with Human Red vs Computer Black as the default mode', () => {
+        assert.strictEqual(api.game.redController, 'human');
+        assert.strictEqual(api.game.blackController, 'ai');
+        assert.ok(api.__elements['mode-hr-cb'].className.includes('active'));
+    });
+
+    it('Human Red vs Human Black clears both sides without resetting the position', () => {
+        api.__elements['mode-hr-hb'].click();
+        assert.strictEqual(api.game.redController, 'human');
+        assert.strictEqual(api.game.blackController, 'human');
         assert.strictEqual(api.game.board[5][0].type, 'chariot');
-        assert.ok(api.__elements['side-toggle'].className.includes('hidden'));
-        assert.ok(api.__elements['vs-human-btn'].className.includes('active'));
-        assert.ok(!api.__elements['vs-ai-btn'].className.includes('active'));
+        assert.ok(api.__elements['mode-hr-hb'].className.includes('active'));
+        assert.ok(!api.__elements['mode-hr-cb'].className.includes('active'));
     });
 
-    it('leaves an in-progress setup untouched when switching to vs-human', () => {
+    it('Computer Red vs Human Black makes Red the AI side and flips for Black', () => {
+        api.game.aiThinking = true;
+        api.__elements['mode-cr-hb'].click();
+        assert.strictEqual(api.game.redController, 'ai');
+        assert.strictEqual(api.game.blackController, 'human');
+        assert.strictEqual(api.game.isFlipped, true);
+        assert.strictEqual(api.game.board[5][0].type, 'chariot');
+        assert.ok(api.__elements['mode-cr-hb'].className.includes('active'));
+    });
+
+    it('Computer Red vs Computer Black sets both sides to AI', () => {
+        api.game.aiThinking = true;
+        api.__elements['mode-cr-cb'].click();
+        assert.strictEqual(api.game.redController, 'ai');
+        assert.strictEqual(api.game.blackController, 'ai');
+    });
+
+    it('leaves an in-progress setup untouched when switching modes', () => {
         api.__elements['setup-btn'].click();
         assert.strictEqual(api.game.setupMode, true);
         api.game.board[5][0] = { type: 'cannon', color: 'black' };
-        api.__elements['vs-human-btn'].click();
-        assert.strictEqual(api.game.vsAI, false);
+        api.__elements['mode-hr-hb'].click();
+        assert.strictEqual(api.game.redController, 'human');
+        assert.strictEqual(api.game.blackController, 'human');
         assert.strictEqual(api.game.setupMode, true);
         assert.strictEqual(api.game.board[5][0].type, 'cannon');
         assert.ok(!api.__elements['setup-panel'].className.includes('hidden'));
-    });
-
-    it('keeps a loaded example position playable by both sides after switching', () => {
-        setBoard(api, [
-            [9, 4, 'king', 'red'],
-            [0, 4, 'king', 'black'],
-            [9, 0, 'chariot', 'red']
-        ]);
-        api.game.vsAI = true;
-        api.__elements['examples-btn'].click();
-        api.__elements['vs-human-btn'].click();
-        assert.strictEqual(api.game.vsAI, false);
-        assert.strictEqual(api.game.board[9][0].type, 'chariot');
-        assert.strictEqual(api.game.board[9][4].type, 'king');
-        assert.deepStrictEqual(api.game.moveHistory, []);
     });
 });
 
