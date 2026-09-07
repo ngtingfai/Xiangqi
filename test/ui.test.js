@@ -180,7 +180,17 @@ describe('mode switching', () => {
         assert.strictEqual(api.game.blackController, 'human');
         assert.strictEqual(api.game.isFlipped, true);
         assert.strictEqual(api.game.board[5][0].type, 'chariot');
+        assert.ok(api.__elements['board-container'].classList.contains('flipped'));
         assert.ok(api.__elements['mode-cr-hb'].className.includes('active'));
+    });
+
+    it('flip button swaps the board-container flipped class', () => {
+        api.__elements['flip-board-btn'].click();
+        assert.strictEqual(api.game.isFlipped, true);
+        assert.ok(api.__elements['board-container'].classList.contains('flipped'));
+        api.__elements['flip-board-btn'].click();
+        assert.strictEqual(api.game.isFlipped, false);
+        assert.ok(!api.__elements['board-container'].classList.contains('flipped'));
     });
 
     it('Computer Red vs Computer Black sets both sides to AI', () => {
@@ -320,5 +330,37 @@ describe('game over review', () => {
         assert.strictEqual(api.game.moveHistory.length, 0);
         assert.strictEqual(api.game.board[9][4].type, 'king');
         assert.strictEqual(api.game.board[9][0].type, 'chariot');
+    });
+});
+
+describe('captured trays', () => {
+    beforeEach(() => {
+        setBoard(api, [
+            [9, 4, 'king', 'red'],
+            [0, 4, 'king', 'black'],
+            [5, 0, 'soldier', 'red'],
+            [4, 0, 'horse', 'black']
+        ]);
+    });
+
+    it('Red tray shows the black pieces red captured, Black tray shows the red pieces black captured', () => {
+        api.makeMove(5, 0, 4, 0);
+        api.updateUI();
+        const redHtml = api.__elements['red-captured-list'].innerHTML;
+        const blackHtml = api.__elements['black-captured-list'].innerHTML;
+        assert.ok(redHtml.includes('馬'));
+        assert.ok(redHtml.includes('captured-piece black'));
+        assert.strictEqual(blackHtml, '');
+    });
+
+    it('each captured piece renders in its own color', () => {
+        api.game.board[2][0] = { type: 'chariot', color: 'black' };
+        api.game.board[2][1] = { type: 'soldier', color: 'red' };
+        api.makeMove(5, 0, 4, 0);
+        api.makeMove(2, 0, 2, 1);
+        api.updateUI();
+        assert.ok(api.__elements['red-captured-list'].innerHTML.includes('captured-piece black'));
+        assert.ok(api.__elements['black-captured-list'].innerHTML.includes('兵'));
+        assert.ok(api.__elements['black-captured-list'].innerHTML.includes('captured-piece red'));
     });
 });

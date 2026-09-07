@@ -195,13 +195,15 @@ function updateUI() {
     tableBody.innerHTML = tableHtml;
     tableBody.scrollTop = tableBody.scrollHeight;
     
-    document.getElementById('red-captured-list').innerHTML = game.capturedPieces.red.map(p => 
-        `<span class="captured-piece red">${getPieceSymbol(p)}</span>`
+    document.getElementById('red-captured-list').innerHTML = game.capturedPieces.black.map(p => 
+        `<span class="captured-piece ${p.color}">${getPieceSymbol(p)}</span>`
     ).join('');
     
-    document.getElementById('black-captured-list').innerHTML = game.capturedPieces.black.map(p => 
-        `<span class="captured-piece black">${getPieceSymbol(p)}</span>`
+    document.getElementById('black-captured-list').innerHTML = game.capturedPieces.red.map(p => 
+        `<span class="captured-piece ${p.color}">${getPieceSymbol(p)}</span>`
     ).join('');
+
+    document.getElementById('board-container').classList.toggle('flipped', game.isFlipped);
 
     updateEvalBar();
 }

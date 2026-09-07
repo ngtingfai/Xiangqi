@@ -82,6 +82,7 @@ document.getElementById('notation-table').addEventListener('click', (e) => {
 document.getElementById('flip-board-btn').addEventListener('click', () => {
     game.isFlipped = !game.isFlipped;
     drawBoard();
+    updateUI();
 });
 
 document.getElementById('music-btn').addEventListener('click', () => {
